@@ -1,0 +1,65 @@
+{
+  "name": "wl-gantt",
+  "version": "1.0.4",
+  "private": false,
+  "author": "weilan<https://github.com/hql7>",
+  "license": "GNU",
+  "main": "lib/wl-gantt.common.js",
+  "bugs": {
+    "url": "https://github.com/hql7/wl-gantt/issues"
+  },
+  "homepage": "https://github.com/hql7/wl-gantt#readme",
+  "keyword": "gantt project wl-gantt 甘特图 项目管理 任务管理 vue element-ui 饿了么ui甘特图",
+  "description": "一个基于vue和element-ui的甘特图组件，gantt、项目管理",
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lib": "vue-cli-service build --target lib --name wl-gantt --dest lib ./src/pages/index.js",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "core-js": "^2.6.5",
+    "dayjs": "^1.8.16",
+    "element-ui": "^2.13.2",
+    "hammerjs": "^2.0.8",
+    "uuid": "^3.3.3",
+    "vue": "^2.6.10",
+    "vue-virtual-scroller": "^1.0.0-rc.2"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.11.0",
+    "@vue/cli-plugin-eslint": "^3.11.0",
+    "@vue/cli-service": "^3.11.0",
+    "babel-eslint": "^10.0.1",
+    "babel-plugin-component": "^1.1.1",
+    "eslint": "^5.16.0",
+    "eslint-plugin-vue": "^5.0.0",
+    "node-sass": "^4.13.0",
+    "sass-loader": "^8.0.0",
+    "vue-cli-plugin-element": "^1.0.1",
+    "vue-template-compiler": "^2.6.10"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "rules": {},
+    "parserOptions": {
+      "parser": "babel-eslint"
+    }
+  },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions"
+  ]
+}

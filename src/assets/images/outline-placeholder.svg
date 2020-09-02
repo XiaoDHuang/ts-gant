@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="72px" height="72px" viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <polygon id="path-1" points="0 0.266955414 59.9461883 0.266955414 59.9461883 51.6687898 0 51.6687898"></polygon>
+        <linearGradient x1="-54.3613719%" y1="48.6940026%" x2="108.925114%" y2="51.203147%" id="linearGradient-3">
+            <stop stop-color="#D1F3FF" offset="0%"></stop>
+            <stop stop-color="#A4E3FF" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="-54.3226072%" y1="-33.5527848%" x2="108.903227%" y2="126.972804%" id="linearGradient-4">
+            <stop stop-color="#D1F3FF" offset="0%"></stop>
+            <stop stop-color="#A4E3FF" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="~Overrides/placeholder/project/blue" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="placeholder/project/blue">
+            <rect id="box" x="0" y="0" width="72" height="72"></rect>
+            <g id="Page-1" transform="translate(6.000000, 10.000000)">
+                <path d="M30,41.5954479 L30,50.0739734" id="Stroke-1" stroke="#1B9AEE" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M30.0068341,41.5954479 L20.0748161,50.9959384" id="Stroke-3" stroke="#1B9AEE" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M30.0310493,41.5954479 L39.9630673,50.9959384" id="Stroke-5" stroke="#1B9AEE" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M31.8043857,4.60290876 L31.8043857,2.7713578 C31.8043857,1.75870334 30.9853722,0.939537739 29.9731749,0.939537739 C28.9609776,0.939537739 28.1416951,1.75870334 28.1416951,2.7713578 L28.1416951,4.60290876 L31.8043857,4.60290876 Z" id="Fill-7" fill="#FFFFFF"></path>
+                <path d="M31.8043857,4.60290876 L31.8043857,2.7713578 C31.8043857,1.75870334 30.9853722,0.939537739 29.9731749,0.939537739 C28.9609776,0.939537739 28.1416951,1.75870334 28.1416951,2.7713578 L28.1416951,4.60290876 L31.8043857,4.60290876 L31.8043857,4.60290876 Z" id="Stroke-9" stroke="#1B9AEE"></path>
+                <mask id="mask-2" fill="white">
+                    <use xlink:href="#path-1"></use>
+                </mask>
+                <g id="Clip-17"></g>
+                <polygon id="Fill-16" fill="#FFFFFF" mask="url(#mask-2)" points="57.4880717 44.807336 2.54986547 44.807336 2.54986547 11.8380732 57.4880717 11.8380732"></polygon>
+                <polygon id="Stroke-18" stroke="#1B9AEE" stroke-linecap="round" stroke-linejoin="round" mask="url(#mask-2)" points="57.4880717 44.807336 2.54986547 44.807336 2.54986547 11.8380732 57.4880717 11.8380732"></polygon>
+                <path d="M59.2735426,6.34331274 C59.2735426,5.33092739 58.4545291,4.51176178 57.4423318,4.51176178 L2.5038565,4.51176178 C1.49165919,4.51176178 0.67264574,5.33092739 0.67264574,6.34331274 L0.67264574,11.8382347 L59.2735426,11.8382347 L59.2735426,6.34331274 Z" id="Fill-19" fill="url(#linearGradient-3)" mask="url(#mask-2)"></path>
+                <path d="M59.2735426,6.34331274 C59.2735426,5.33092739 58.4545291,4.51176178 57.4423318,4.51176178 L2.5038565,4.51176178 C1.49165919,4.51176178 0.67264574,5.33092739 0.67264574,6.34331274 L0.67264574,11.8382347 L59.2735426,11.8382347 L59.2735426,6.34331274 L59.2735426,6.34331274 Z" id="Stroke-20" stroke="#1B9AEE" stroke-linecap="round" stroke-linejoin="round" mask="url(#mask-2)"></path>
+                <polyline id="Stroke-21" stroke="#1B9AEE" stroke-linecap="round" stroke-linejoin="round" mask="url(#mask-2)" points="11.7403318 35.7568209 22.6479552 24.7508304 33.364009 35.4462699 46.038 22.6663177"></polyline>
+                <path d="M25.5007803,24.8395554 C25.5007803,26.3255713 24.2964753,27.5301 22.8107354,27.5301 C21.3249955,27.5301 20.1206906,26.3255713 20.1206906,24.8395554 C20.1206906,23.3535395 21.3249955,22.1490108 22.8107354,22.1490108 C24.2964753,22.1490108 25.5007803,23.3535395 25.5007803,24.8395554" id="Fill-22" fill="url(#linearGradient-4)" mask="url(#mask-2)"></path>
+                <path d="M22.8107354,27.5301 C21.3249955,27.5301 20.1206906,26.3255713 20.1206906,24.8395554 C20.1206906,23.3535395 21.3249955,22.1490108 22.8107354,22.1490108 C24.2964753,22.1490108 25.5007803,23.3535395 25.5007803,24.8395554 C25.5007803,26.3255713 24.2964753,27.5301 22.8107354,27.5301 Z" id="Stroke-23" stroke="#1B9AEE" stroke-linecap="round" stroke-linejoin="round" mask="url(#mask-2)"></path>
+                <path d="M49.1446009,22.6664522 C49.1446009,24.1524682 47.940296,25.3569968 46.4545561,25.3569968 C44.9688161,25.3569968 43.7645112,24.1524682 43.7645112,22.6664522 C43.7645112,21.1804363 44.9688161,19.9759076 46.4545561,19.9759076 C47.940296,19.9759076 49.1446009,21.1804363 49.1446009,22.6664522" id="Fill-24" fill="url(#linearGradient-4)" mask="url(#mask-2)"></path>
+                <path d="M49.1446009,22.6664522 C49.1446009,24.1524682 47.940296,25.3569968 46.4545561,25.3569968 C44.9688161,25.3569968 43.7645112,24.1524682 43.7645112,22.6664522 C43.7645112,21.1804363 44.9688161,19.9759076 46.4545561,19.9759076 C47.940296,19.9759076 49.1446009,21.1804363 49.1446009,22.6664522 L49.1446009,22.6664522 Z" id="Stroke-25" stroke="#1B9AEE" stroke-linecap="round" stroke-linejoin="round" mask="url(#mask-2)"></path>
+            </g>
+        </g>
+    </g>
+</svg>

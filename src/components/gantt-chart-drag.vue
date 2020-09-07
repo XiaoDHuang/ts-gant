@@ -26,7 +26,31 @@
           </div>
         </header>
         <main>
-          <div class="chart__3nGi" :style="`left:0px;height:${svgViewH}px;width:${viewWidth}px;`">
+          <div
+            class="selection-indicator__3rr6" 
+            v-show="showSelectionIndicator" 
+            :style="`display: none; height: 28px; top: ${selectionIndicatorTop}px;`"
+          ></div>
+          <!-- <div
+            ref="chartView"
+            @wheel.prevent="wheel"
+            @mouseup="shadowGesturePressup"
+            @mouseenter.prevent="onMouseEnter"
+            @mousemove.prevent="deOnMouseMove"
+            @mouseleave="showSelectionIndicator = false"
+            class="chart__3nGi" 
+            :style="`left:0px;height:${svgViewH}px;width:${viewWidth}px;`"
+          > -->
+          <div
+            ref="chartView"
+            @wheel.prevent="wheel"
+            @mouseup="shadowGesturePressup"
+            @mouseenter.prevent="onMouseEnter"
+            @mousemove.prevent="deOnMouseMove"
+            @mouseleave="showSelectionIndicator = false"
+            class="chart__3nGi" 
+            :style="`left:0px;height:${svgViewH}px;width:${viewWidth}px;`"
+          >
             <svg class="chart-svg-renderer__7ors"
               xmlns="http://www.w3.org/2000/svg" 
               version="1.1" 
@@ -43,7 +67,27 @@
                   <path :d="`M${item.left}.5,0 L${item.left},${svgViewH}`"></path>
                 </g>
               </template>
+              <g
+                v-if="showDragToolShadow" 
+                fill="rgba(204, 236, 255, 0.3)" 
+                stroke="#87D2FF"
+              >
+                <rect :x="dragToolShadowX" y="0" :width="dragToolShadowW" :height="svgViewH" stroke-width="0"></rect>
+                <path :d="`M${shadowGestBarLeft},0 L${shadowGestBarLeft},${svgViewH}`"></path>
+              </g>
             </svg>
+            <div class="render-chunk__22Ez" :style="`height: 178px; transform:translateX(-${translateX}px;`">
+              <task-bar
+                v-for="(bar, index) in barList" 
+                :key="index"
+                :width="bar.width"
+                :translateX="bar.translateX" 
+                :translateY="bar.translateY" 
+                :showDragBar="getShowBar(bar.translateY, selectionIndicatorTop)"
+                @gesturePress="(event, type) => shadowGesturePress(event, type, bar)" 
+                @gesturePressup="(event, type) => shadowGesturePressup(event, type, bar)"
+              ></task-bar>
+            </div>
           </div>
         </main>
       </div>
@@ -52,10 +96,12 @@
 </template>
 
 <script>
+import debounce from 'lodash/debounce';
 import dayjs from "dayjs"; // 导入日期js
 // const uuidv4 = require("uuid/v4"); // 导入uuid生成插件
 import isBetween from "dayjs/plugin/isBetween";
 // import weekday from 'dayjs/plugin/weekday';
+import taskBar from './task-bar';
 
 import '@/assets/css/gantt.css';
 
@@ -64,19 +110,32 @@ import Hammer from 'hammerjs';
 dayjs.extend(isBetween);
 // dayjs.extend(weekday);
 
-import {
-  // deepClone,
-  // flattenDeep,
-  // getMin,
-  // getMax,
-  // flattenDeepParents,
-  // regDeepParents
-} from "@/util/array.js"; // 导入数组操作函数
+/*
+ **************定义字段类型****************
+ // 列字段名称
+ interface Column {
+   minWidth: number,
+   prop: string,
+   sortable: boolean,
+   width: width
+ }
+ type ColumnList = Column[]
+
+
+*/
 
 const pxUnitAmp = (60 * 60 * 24 / 30) * 1000;
+const rowHeight = 28;
+
+const barList = [
+  { translateY: 96, translateX: 554810, width: 121 }
+];
 
 export default {
   name: "tsGantt",
+  components: {
+    taskBar
+  },
   data() {
     return {
       viewWidth: this.width,
@@ -84,7 +143,21 @@ export default {
       cellUnit: 30,
       wheelDis: 0,
       translateX: 552410,
-      format: 'YYYY年 MM月'
+      format: 'YYYY年 MM月',
+
+      selectionIndicatorTop: 0,
+      showSelectionIndicator: false,
+      
+      // 拖拽阴影相关参数
+      shadowGestSide: 'right',
+      shadowGestBarLeft: 554810 + 128,
+      showDragToolShadow: false,
+      dragToolShadowX: 554810,
+      dragToolShadowW: 128,
+      isShadowGesturePress: false,
+
+      // 数据部分
+      barList,
     };
   },
   props: {
@@ -115,6 +188,182 @@ export default {
     }
   },
   methods: {
+    /** 
+     * 鼠标进入图表区域
+     */
+    onMouseEnter() {
+      this.chartViewTop = this.$refs.chartView.getBoundingClientRect().top;
+    },
+    /**
+     * 光标在图表区域滑动 选中行进行移动对应行数据
+     */
+    onMouseMove(event) {
+      if (!this.isPointerPress) {
+        this.showSelectionBar(event);
+      }
+    },
+
+    /**
+     * 根据选中行高度 显示对应条状工具条
+     */
+    getShowBar(top, selectionIndicatorTop) {
+      let baseTop = top - (top % rowHeight);
+      let isShow = (selectionIndicatorTop >= baseTop && selectionIndicatorTop <= baseTop + rowHeight);
+      return isShow;
+    },
+    /**
+     * 手势按下的逻辑
+     */
+    shadowGesturePress(event, type, barInfo) {
+      const { translateX, width } = barInfo;
+      let barLeft = (type === 'left') ? translateX : translateX + width;
+
+      this.dragToolShadowX = translateX;
+      this.dragToolShadowW = width;
+      this.shadowGestBarLeft = barLeft;
+
+      this.isPointerPress = true;
+      const sideType = type;
+      const step = this.cellUnit;
+      const isLeft = sideType === 'left';
+      const clientRect = event.target.getBoundingClientRect();
+      const startX = isLeft ? clientRect.right : clientRect.left;
+
+      const basePointerX = isLeft ? startX + width : startX - width;
+
+      const setBarShadowPosition = (moveEv) => {
+
+        const pointerX = moveEv.center.x;
+
+        this.showDragToolShadow = true;
+        const isShrink = getDragSideShrink(moveEv);
+        const isExpand = getDragSideExpand(moveEv);
+
+        const getShadowMoveDis = (baseX, pointerX) => {
+          const moveDis = pointerX - baseX;
+          return moveDis;
+        } 
+
+        const moveDis = getShadowMoveDis(startX, pointerX);
+
+        if (isShrink) {
+          moveShrinkStep(moveDis, step, pointerX);
+        } 
+
+        if (isExpand) {
+          moveExpandStep(moveDis, step, pointerX);
+        }
+      }
+
+      const getDragSideShrink = (moveEv) => {
+        let direction = 0;
+        if (moveEv.direction === 2) {
+          direction = -1;
+        } else if (moveEv.direction === 4) {
+          direction = 1;
+        }
+
+        return (sideType === 'right' && direction < 0) || (sideType === 'left' && direction > 0);
+      }
+      const getDragSideExpand = (mouseEv) => {
+        let direction = 0;
+        if (mouseEv.direction === 2) {
+          direction = -1;
+        } else if (mouseEv.direction === 4) {
+          direction = 1;
+        }
+
+        return (sideType === 'right' && direction > 0) || (sideType === 'left' && direction < 0);
+      }
+      /**
+       * 跟随鼠标移动搜索阴影
+       */
+      const moveShrinkStep = (moveDis, step, pointerX) => {
+        const isLeft = sideType === 'left';
+        
+        let translateX = this.dragToolShadowX;
+        let width = this.dragToolShadowW;
+        let barLeft = this.shadowGestBarLeft;
+        
+        if (isLeft) {
+          translateX += step;
+          width -= step;
+          barLeft = translateX;
+        } else {
+          width -= step;
+          barLeft = translateX + width;
+        }
+        
+        const pointerDis = Math.abs(pointerX - basePointerX);
+        if (pointerDis > width) return; 
+        if (width <= step) return;
+
+        this.dragToolShadowW = width;
+        this.dragToolShadowX = translateX;
+        this.shadowGestBarLeft = barLeft;
+
+        barInfo.translateX = translateX;
+        barInfo.width = width;
+      }
+      /**
+       * 跟随鼠标拖动扩大阴影
+       */
+      const moveExpandStep = (moveDis, step, pointerX) => {
+        const space = 5;
+
+        let translateX = this.dragToolShadowX;
+        let width = this.dragToolShadowW;
+        let barLeft = this.shadowGestBarLeft;
+        
+        const pointerDis = Math.abs(pointerX - basePointerX);
+        if (pointerDis < space || pointerDis < width) return;
+      
+        // 测试代码
+        if (isLeft) {
+          translateX -= step;
+          width += step;
+          barLeft = translateX;
+        } else {
+          width += step;
+          barLeft = translateX + width;
+        }
+
+        this.dragToolShadowW = width;
+        this.dragToolShadowX = translateX;
+        this.shadowGestBarLeft = barLeft;
+
+        barInfo.translateX = translateX;
+        barInfo.width = width;
+      }
+
+      this.chartHammer.on('panmove', setBarShadowPosition);
+      this._setBarShadowPosition = setBarShadowPosition;
+    },
+    shadowGesturePressup() {
+      this.isPointerPress = false;
+      this.showDragToolShadow = false;
+      this.chartHammer.off('panmove', this._setBarShadowPosition)
+    },
+
+    /**
+     * 计算位置
+     */
+    showSelectionBar(event) {
+      /** TODO 增加节流机制更平滑 */
+      const topMargin = 4;
+      const rowH = 28;
+      const offsetY = event.clientY - this.chartViewTop;
+
+      if (offsetY < topMargin) {
+        this.showSelectionIndicator = false;
+        return;
+      } else {
+        let top = Math.floor((offsetY - 4) / rowH) * rowH + 4;
+        this.showSelectionIndicator = true;
+        this.selectionIndicatorTop = top;
+      }
+    },
+
     wheel(event) {
       this.translateX += event.deltaX;
     },
@@ -249,33 +498,39 @@ export default {
   watch: {
   },
   created() {
+    this.deOnMouseMove = debounce(this.onMouseMove, 5)
   },
   mounted() {
-    const timeAxisEl = this.$refs.timeAxisRender;
-    const ha = new Hammer(timeAxisEl);
-  
-    let baseX = 0;
-    const panStart = () => {
-      baseX = this.translateX;
-    }
+    const chartView = this.$refs.chartView;
+    this.chartHammer = new Hammer(chartView);
 
-    const panMove = (e) => {
-      this.translateX = baseX - e.deltaX;
-    }
 
-    const panEnd = (e) => {
-      this.translateX = baseX - e.deltaX;
-      baseX = 0;
-    }
+    // const timeAxisEl = this.$refs.timeAxisRender;
+    // const ha = new Hammer(timeAxisEl);
+    // let baseX = 0;
+
+    // const panStart = () => {
+    //   console.log('panStart');
+    // }
+
+    // const panMove = (e) => {
+    //   console.log(e);
+    //   console.log('panMove>>>>>>>>>>>>>>>');
+    //   // this.translateX = baseX - e.deltaX;
+    // }
+
+    // const panEnd = (e) => {
+    //   console.log('pandEnd');
+    // }
 
     // ha.on('panstart', panStart);
     // ha.on('panmove', panMove);
     // ha.on('panend', panEnd);
 
-    this.ha = ha;
+    // this.ha = ha;
   },
   beforeDestroy() {
-    this.ha.destroy()
+    // this.ha.destroy()
     // this.$af.destroy();
   }
 };

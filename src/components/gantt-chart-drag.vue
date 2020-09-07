@@ -72,8 +72,9 @@
                 fill="rgba(204, 236, 255, 0.3)" 
                 stroke="#87D2FF"
               >
+                <path v-show="shadowGestBarLeft" :d="`M${shadowGestBarLeft},0 L${shadowGestBarLeft},${svgViewH}`"></path>
                 <rect :x="dragToolShadowX" y="0" :width="dragToolShadowW" :height="svgViewH" stroke-width="0"></rect>
-                <path :d="`M${shadowGestBarLeft},0 L${shadowGestBarLeft},${svgViewH}`"></path>
+                <path v-show="shadowGestBarRight" :d="`M${shadowGestBarRight},0 L${shadowGestBarRight},${svgViewH}`"></path>
               </g>
             </svg>
             <div class="render-chunk__22Ez" :style="`height: 178px; transform:translateX(-${translateX}px;`">
@@ -86,6 +87,8 @@
                 :showDragBar="getShowBar(bar.translateY, selectionIndicatorTop)"
                 @gesturePress="(event, type) => shadowGesturePress(event, type, bar)" 
                 @gesturePressup="(event, type) => shadowGesturePressup(event, type, bar)"
+                @gestureBarPress="(event) => shadowGestureBarPress(event, bar)" 
+                @gestureBarPressup="(event) => shadowGestureBarPressup(event, bar)"
               ></task-bar>
             </div>
           </div>
@@ -150,7 +153,8 @@ export default {
       
       // 拖拽阴影相关参数
       shadowGestSide: 'right',
-      shadowGestBarLeft: 554810 + 128,
+      shadowGestBarLeft: 554810,
+      shadowGestBarRight: 0,
       showDragToolShadow: false,
       dragToolShadowX: 554810,
       dragToolShadowW: 128,
@@ -335,16 +339,88 @@ export default {
         barInfo.translateX = translateX;
         barInfo.width = width;
       }
+  
+      const panMove = (event) => setBarShadowPosition(event);
+      const panEnd = () => {
+        this.showDragToolShadow = false;
 
-      this.chartHammer.on('panmove', setBarShadowPosition);
-      this._setBarShadowPosition = setBarShadowPosition;
+        this.chartHammer.off('panmove', panMove);
+        this.chartHammer.off('panend', panEnd);
+        this.shadowGestBarLeft = 0;
+        this.shadowGestBarRight = 0;
+      }
+
+      this.chartHammer.on('panmove', panMove);
+      this.chartHammer.on('panend', panEnd);
     },
+    /**
+     * 手指抬起做一些清理操作
+     */
     shadowGesturePressup() {
-      this.isPointerPress = false;
-      this.showDragToolShadow = false;
-      this.chartHammer.off('panmove', this._setBarShadowPosition)
     },
+    /**
+     * 手指按住任务条线触发事件
+     */
+    shadowGestureBarPress(event, barInfo) {
+      const step = this.cellUnit;
 
+      let { translateX, width } = barInfo;
+      let barLeft = translateX;
+      let barRight = translateX + width;
+
+      let startX = 0;
+      let pointerX = 0;
+
+      const layoutShadow = (width, translateX, barLeft, barRight) => {
+        this.dragToolShadowW = width;
+        this.dragToolShadowX = translateX;
+        this.shadowGestBarLeft = barLeft;
+        this.shadowGestBarRight = barRight;
+
+        barInfo.translateX = translateX;
+      };
+
+      const setBarShadowPosition = (event) => {
+        pointerX = event.center.x;
+        const pointerDis = pointerX - startX;
+        const direction = pointerDis > 0 ? 1 : -1; 
+        const moveX = step * direction;
+
+        if (Math.abs(pointerDis) >= step) {
+          translateX = translateX + moveX;
+          barLeft = translateX;
+          barRight = translateX + width;
+          layoutShadow(width, translateX, barLeft, barRight);
+          startX = startX + moveX;
+        }
+      };
+
+      layoutShadow(width, translateX, barLeft, barRight);
+
+      const panStart = (event) => {
+        startX = event.center.x;
+      };
+
+      const panMove = (event) => {
+        this.showDragToolShadow = true;
+        setBarShadowPosition(event);
+      }
+
+      const panEnd = () => {
+        this.showDragToolShadow = false;
+        this.chartHammer.off('panstart', panStart);
+        this.chartHammer.off('panmove', panMove);
+        this.chartHammer.off('panend', panEnd);
+        this.shadowGestBarLeft = 0;
+        this.shadowGestBarRight = 0;
+      }
+
+      this.chartHammer.on('panstart', panStart);
+      this.chartHammer.on('panmove', panMove);
+      this.chartHammer.on('panend', panEnd);
+    },
+    shadowGestureBarPressup(event) {
+    },
     /**
      * 计算位置
      */

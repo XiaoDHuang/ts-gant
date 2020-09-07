@@ -27,7 +27,7 @@
         <div class="resize-bg__2eMo compact__3dEj" :style="`width: ${width + 30 }px; left: -14px;`"></div>
       </template>
       <template>
-        <div class="bar__BPW0">
+        <div ref="barEl" class="bar__BPW0">
           <svg xmlns="http://www.w3.org/2000/svg"
             version="1.1" 
             :width="width" 
@@ -110,10 +110,12 @@ export default {
         this.destroyGesture && this.destroyGesture();
         this.destroyGesture = null;
       }
-
     }
   },
   methods: {
+    /**
+     * 初始化箭头拖拽功能
+     */
     initGesture() {
       const leftHander = this.$refs.leftHander;
       const rightHander = this.$refs.rightHander;
@@ -139,9 +141,34 @@ export default {
         leftHam.destroy();
         rightHam.destroy();
       }
+    },
+    /**
+     * 初始化条状图初始化
+     */
+    initGestureBar() {
+      const barEl = this.$refs.barEl;
+      const barHam = new Hammer(barEl);
+
+      const press = (event) => {
+        this.$emit('gestureBarPress', event);
+      }
+
+      const pressup = (event) => {
+        this.$emit('gestureBarPressup', event);
+      }
+
+      barHam.on('press', press);
+      barHam.on('pressup', pressup);
+      this.destroyGestureBar = () => {
+        barHam.destroy();
+      }
     }
   },
+  beforeDestroy() {
+    this.destroyGestureBar();
+  },
   mounted() {
+    this.initGestureBar();
   }
 }
 </script>

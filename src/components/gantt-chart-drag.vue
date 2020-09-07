@@ -1,6 +1,6 @@
 <template>
   <div class="gantt-app-view" style="height: 100%;width: 100%;">
-    <div class="container__1PWP">
+    <div class="container__1PWP" style="box-sizing: content-box;">
       <div ref="ganttBody" id="gantt-body" class="body__3LBc gantt__3Xim" :width="viewWidth" :height="viewHeight">
         <header>
           <div ref="timeAxisRender" @wheel.prevent="wheel" class="time-axis__3meF" style="left: 0px; width: 1332px;">
@@ -78,18 +78,30 @@
               </g>
             </svg>
             <div class="render-chunk__22Ez" :style="`height: 178px; transform:translateX(-${translateX}px;`">
-              <task-bar
-                v-for="(bar, index) in barList" 
-                :key="index"
-                :width="bar.width"
-                :translateX="bar.translateX" 
-                :translateY="bar.translateY" 
-                :showDragBar="getShowBar(bar.translateY, selectionIndicatorTop)"
-                @gesturePress="(event, type) => shadowGesturePress(event, type, bar)" 
-                @gesturePressup="(event, type) => shadowGesturePressup(event, type, bar)"
-                @gestureBarPress="(event) => shadowGestureBarPress(event, bar)" 
-                @gestureBarPressup="(event) => shadowGestureBarPressup(event, bar)"
-              ></task-bar>
+              <template v-for="(bar, index) in barList" >
+                <task-bar-thumb
+                  v-if="getshowTaskBar(bar.width, bar.translateX, translateX)"
+                  :key="index"
+                  :label="bar.label"
+                  :viewWidth="viewWidth"
+                  :viewTranslateX="translateX"
+                  :translateX="bar.translateX" 
+                  :translateY="bar.translateY" 
+                ></task-bar-thumb>
+                <task-bar
+                  v-else 
+                  :key="index"
+                  :label="bar.label"
+                  :width="bar.width"
+                  :translateX="bar.translateX" 
+                  :translateY="bar.translateY" 
+                  :showDragBar="getShowBar(bar.translateY, selectionIndicatorTop)"
+                  @gesturePress="(event, type) => shadowGesturePress(event, type, bar)" 
+                  @gesturePressup="(event, type) => shadowGesturePressup(event, type, bar)"
+                  @gestureBarPress="(event) => shadowGestureBarPress(event, bar)" 
+                  @gestureBarPressup="(event) => shadowGestureBarPressup(event, bar)"
+                ></task-bar>
+              </template>
             </div>
           </div>
         </main>
@@ -105,13 +117,17 @@ import dayjs from "dayjs"; // 导入日期js
 import isBetween from "dayjs/plugin/isBetween";
 // import weekday from 'dayjs/plugin/weekday';
 import taskBar from './task-bar';
+import taskBarThumb from './task-bar-thumb';
 
-import '@/assets/css/gantt.css';
 
 import Hammer from 'hammerjs';
 
+
+import '@/assets/css/icons.css';
+import '@/assets/css/cds.css';
+import '@/assets/css/gantt.css';
+
 dayjs.extend(isBetween);
-// dayjs.extend(weekday);
 
 /*
  **************定义字段类型****************
@@ -131,13 +147,16 @@ const pxUnitAmp = (60 * 60 * 24 / 30) * 1000;
 const rowHeight = 28;
 
 const barList = [
-  { translateY: 96, translateX: 554810, width: 121 }
+  { translateY: 42, translateX: 554780, width: 90, label: '绘制表盘设计逻辑' },
+  { translateY: 70, translateX: 554810, width: 120, label: '阅读喜欢的📚' },
+  { translateY: 98, translateX: 554810, width: 120, label: '三体'},
 ];
 
 export default {
   name: "tsGantt",
   components: {
-    taskBar
+    taskBar,
+    taskBarThumb
   },
   data() {
     return {
@@ -213,7 +232,18 @@ export default {
     getShowBar(top, selectionIndicatorTop) {
       let baseTop = top - (top % rowHeight);
       let isShow = (selectionIndicatorTop >= baseTop && selectionIndicatorTop <= baseTop + rowHeight);
+
       return isShow;
+    },
+   
+    /**
+     * 是否显示任务条状图 
+     */
+    getshowTaskBar(width, translateX, timeTranslateX) {
+      const rightSide = this.translateX + this.viewWidth;
+      const right = translateX;
+
+      return translateX + width < timeTranslateX || right - rightSide > 0;
     },
     /**
      * 手势按下的逻辑
@@ -342,6 +372,7 @@ export default {
   
       const panMove = (event) => setBarShadowPosition(event);
       const panEnd = () => {
+        this.isPointerPress = false;
         this.showDragToolShadow = false;
 
         this.chartHammer.off('panmove', panMove);
@@ -613,4 +644,10 @@ export default {
 </script>
 <style>
 /* @import url('./gantt.css'); */
+/* import url(@/assets/fonts/tb-icons.woff2'; */
+/* @import url('../assets/css/quarterly.css'); */
+/* @import '../assets/css/icons.css'; */
+/* @import '../assets/css/cds.css'; */
+/* @import '../assets/css/gantt.css'; */
+
 </style>

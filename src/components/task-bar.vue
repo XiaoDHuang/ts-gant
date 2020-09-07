@@ -26,16 +26,15 @@
         <div ref="rightHander" class="resize-handle__3s57 right__1LvQ" :style="`left: ${width + 2}px;`"></div>
         <div class="resize-bg__2eMo compact__3dEj" :style="`width: ${width + 30 }px; left: -14px;`"></div>
       </template>
-      <template>
-        <div ref="barEl" class="bar__BPW0">
-          <svg xmlns="http://www.w3.org/2000/svg"
-            version="1.1" 
-            :width="width" 
-            :height="height + 1" 
-            :viewBox="`0 0 ${width} ${height + 1}`">
-            <path fill="#FD998F" stroke="#F96B5D" :d="`
-              M${width - 4},0.5
-              l-${width - 7}.5,0
+      <div ref="barEl" class="bar__BPW0" style="">
+        <svg xmlns="http://www.w3.org/2000/svg"
+          version="1.1" 
+          :width="width + 1" 
+          :height="height + 1" 
+          :viewBox="`0 0 ${width + 1} ${height + 1}`">
+          <path fill="#FD998F" stroke="#F96B5D" :d="`
+              M${width - 2},0.5
+              l-${width - 5}.5,0
               c-0.41421,0 -0.78921,0.16789 -1.06066,0.43934
               c-0.27145,0.27145 -0.43934,0.64645 -0.43934,1.06066
               l0,5.3
@@ -43,8 +42,8 @@
               c0.03256,0.38255 0.20896,0.724 0.47457,0.97045
               c0.26763,0.24834 0.62607,0.40013 1.01995,0.40013
               l4,0
-          
-              l${width - 11},0
+
+              l${width - 12},0
             
               l4,0
               c0.41421,0 0.78921,-0.16789 1.06066,-0.43934
@@ -55,12 +54,11 @@
               c-0.26763,-0.24834 -0.62607,-0.40013 -1.01995,-0.40013z
             `" 
             class="default__3VGg"></path>
-          </svg>
-        </div>
-      </template>
+        </svg>
+      </div>
     </div>
-  <div class="label__fdzT" :style="`left:${width + 45}px;`">三体</div>
-</div>
+  <div class="label__fdzT icon" :style="`left:${width + 45}px;`">{{label}}</div>
+  </div>
 </template>
 <script>
 import Hammer from 'hammerjs';
@@ -68,6 +66,10 @@ import Hammer from 'hammerjs';
 export default {
   name: 'task-bar',
   props: {
+    label: {
+      type: String,
+      default: ''
+    },
     selectTop: {
       type: Number,
       default: 0,
@@ -166,9 +168,13 @@ export default {
   },
   beforeDestroy() {
     this.destroyGestureBar();
+    this.destroyGesture && this.destroyGesture();
   },
   mounted() {
     this.initGestureBar();
   }
 }
 </script>
+<style>
+
+</style>

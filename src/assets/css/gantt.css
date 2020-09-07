@@ -230,7 +230,8 @@
   position: relative;
   height: 8px;
   line-height: 8px;
-  border-radius: 4px
+  border-radius: 4px;
+  top: -1px;
 }
 
 .task-bar__2VdE .dependency-handle__1Idl {
@@ -285,7 +286,7 @@
 .resize-bg__2eMo {
   position: absolute;
   left: 0;
-  top: -4px;
+  top: -5px;
   border-radius: 4px;
   box-shadow: 0 2px 4px 0 #f7f7f7;
   border: 1px solid #f0f0f0;
@@ -417,7 +418,7 @@
   position: absolute;
   white-space: nowrap;
   font-size: 12px;
-  top: -4px
+  top: -6px
 }
 
 .label__fdzT {
@@ -3126,4 +3127,8 @@ body.board-fullscreen #navigation-container,
 body.board-fullscreen #navigator,
 body.board-fullscreen #tb-navigation-container {
   display: none
+}
+
+.icon-triangle-right-s:before {
+  content: "\EBC1";
 }

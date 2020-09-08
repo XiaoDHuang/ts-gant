@@ -1,7 +1,12 @@
 <template>
   <div class="gantt-app-view" style="height: 100%;width: 100%;">
     <div class="container__1PWP" style="box-sizing: content-box;">
-      <div ref="ganttBody" id="gantt-body" class="body__3LBc gantt__3Xim" :width="viewWidth" :height="viewHeight">
+      <div 
+        ref="ganttBody" 
+        id="gantt-body" 
+        class="body__3LBc gantt__3Xim"
+        :width="viewWidth" 
+        :height="viewHeight">
         <header>
           <div ref="timeAxisRender" @wheel.prevent="wheel" class="time-axis__3meF" style="left: 0px; width: 1332px;">
             <div  class="render-chunk__28qu" :style="`transform: translateX(-${translateX}px;`">
@@ -46,7 +51,7 @@
             @wheel.prevent="wheel"
             @mouseup="shadowGesturePressup"
             @mouseenter.prevent="onMouseEnter"
-            @mousemove.prevent="deOnMouseMove"
+            @mousemove="deOnMouseMove"
             @mouseleave="showSelectionIndicator = false"
             class="chart__3nGi" 
             :style="`left:0px;height:${svgViewH}px;width:${viewWidth}px;`"
@@ -210,6 +215,7 @@ export default {
       showSelectionIndicator: false,
       
       // 拖拽阴影相关参数
+      gestureKeyPress: false,
       shadowGestSide: 'right',
       shadowGestBarLeft: 554810,
       shadowGestBarRight: 0,
@@ -290,6 +296,7 @@ export default {
      * 手势按下的逻辑
      */
     shadowGesturePress(event, type, barInfo) {
+      this.gestureKeyPress = true;
       const { translateX, width } = barInfo;
       let barLeft = (type === 'left') ? translateX : translateX + width;
 
@@ -411,7 +418,9 @@ export default {
         barInfo.width = width;
       }
   
-      const panMove = (event) => setBarShadowPosition(event);
+      const panMove = (event) => {
+        setBarShadowPosition(event)
+      };
       const panEnd = () => {
         this.isPointerPress = false;
         this.showDragToolShadow = false;
@@ -429,13 +438,15 @@ export default {
      * 手指抬起做一些清理操作
      */
     shadowGesturePressup() {
+      this.gestureKeyPress = false;
     },
     /**
      * 手指按住任务条线触发事件
      */
     shadowGestureBarPress(event, barInfo) {
-      const step = this.cellUnit;
+      this.gestureKeyPress = true;
 
+      const step = this.cellUnit;
       let { translateX, width } = barInfo;
       let barLeft = translateX;
       let barRight = translateX + width;
@@ -486,12 +497,13 @@ export default {
         this.shadowGestBarLeft = 0;
         this.shadowGestBarRight = 0;
       }
-
+      
       this.chartHammer.on('panstart', panStart);
       this.chartHammer.on('panmove', panMove);
       this.chartHammer.on('panend', panEnd);
     },
-    shadowGestureBarPressup(event) {
+    shadowGestureBarPressup() {
+      this.gestureKeyPress = false;
     },
     /**
      * 计算位置
@@ -643,7 +655,33 @@ export default {
       return list;
     },
 
-    ...locationModule
+    ...locationModule,
+    initGrantBodyGesture() {
+      const ganttBody = this.$refs.ganttBody;
+      const gantBodyH = new Hammer(ganttBody);
+      let translateX = this.translateX;
+
+      const panStart = () => {
+        if (this.gestureKeyPress) return;
+
+        translateX = this.translateX;
+      }
+
+      const panMove = (event) => {
+        if (this.gestureKeyPress) return;
+
+        this.translateX = translateX - event.deltaX;
+      }
+
+      const panEnd = (event) => {
+        if (this.gestureKeyPress) return;
+        this.translateX = translateX - event.deltaX;
+      }
+
+      gantBodyH.on('panstart', panStart);
+      gantBodyH.on('panmove', panMove);
+      gantBodyH.on('panend', panEnd);
+    },
   },
   watch: {
   },
@@ -651,33 +689,11 @@ export default {
     this.deOnMouseMove = debounce(this.onMouseMove, 5)
   },
   mounted() {
+    this.initGrantBodyGesture();
+
     const chartView = this.$refs.chartView;
     this.chartHammer = new Hammer(chartView);
-
-
-    // const timeAxisEl = this.$refs.timeAxisRender;
-    // const ha = new Hammer(timeAxisEl);
-    // let baseX = 0;
-
-    // const panStart = () => {
-    //   console.log('panStart');
-    // }
-
-    // const panMove = (e) => {
-    //   console.log(e);
-    //   console.log('panMove>>>>>>>>>>>>>>>');
-    //   // this.translateX = baseX - e.deltaX;
-    // }
-
-    // const panEnd = (e) => {
-    //   console.log('pandEnd');
-    // }
-
-    // ha.on('panstart', panStart);
-    // ha.on('panmove', panMove);
-    // ha.on('panend', panEnd);
-
-    // this.ha = ha;
+    this.chartHammer.options.domEvents = true;
   },
   beforeDestroy() {
     // this.ha.destroy()

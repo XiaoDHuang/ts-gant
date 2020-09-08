@@ -1,5 +1,10 @@
 <template>
-  <div :class="sideClass" class="task-bar-thumb__2suT" :style="`top: ${top}px; left: ${left}px;`">
+  <div 
+    v-on:click.stop
+    :class="sideClass" 
+    class="task-bar-thumb__2suT" 
+    :style="`top: ${top}px; left: ${left}px;`"
+  >
     <button class="btn-type-subtle__1YDY btn-size-smaller__zaJ7" @click="timeTranslateLocation" type="button" data-role="button">
       <div class="label__fdzT" v-if="type === 'right'" style="left: 0px;">{{label}}</div>
       <span class="icon__YImk icon dls-icon icon-triangle-right-s" data-role="icon"></span>

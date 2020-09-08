@@ -1,5 +1,6 @@
 <template>
-  <div 
+  <div
+    v-on:click.stop
     class="task-bar__2VdE overdue__1gSA" 
     :style="`transform: translate(${translateX}px, ${translateY}px);`"
   >

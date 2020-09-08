@@ -86,7 +86,9 @@
                   :viewWidth="viewWidth"
                   :viewTranslateX="translateX"
                   :translateX="bar.translateX" 
-                  :translateY="bar.translateY" 
+                  :translateY="bar.translateY"
+                  :width="bar.width"
+                  @timeTranslateLocation="locaTimeTranslate"
                 ></task-bar-thumb>
                 <task-bar
                   v-else 
@@ -105,6 +107,12 @@
             </div>
           </div>
         </main>
+        <time-indicator
+          :viewTranslateX="translateX"
+          :viewWidth="viewWidth"
+          :pxUnitAmp="pxUnitAmp"
+          @timeTranslateLocation="locaTimeTranslate"
+        ></time-indicator>
       </div>
     </div>  
   </div>
@@ -116,9 +124,9 @@ import dayjs from "dayjs"; // 导入日期js
 // const uuidv4 = require("uuid/v4"); // 导入uuid生成插件
 import isBetween from "dayjs/plugin/isBetween";
 // import weekday from 'dayjs/plugin/weekday';
-import taskBar from './task-bar';
-import taskBarThumb from './task-bar-thumb';
-
+import TaskBar from './task-bar';
+import TaskBarThumb from './task-bar-thumb';
+import TimeIndicator from './time-indicator.vue';
 
 import Hammer from 'hammerjs';
 
@@ -129,6 +137,7 @@ import '@/assets/css/gantt.css';
 
 dayjs.extend(isBetween);
 
+// console.log(TimeIndicator, '>>>>>>>');
 /*
  **************定义字段类型****************
  // 列字段名称
@@ -152,11 +161,41 @@ const barList = [
   { translateY: 98, translateX: 554810, width: 120, label: '三体'},
 ];
 
+const viewTypeList = [
+  {
+    key: "day",
+    label: "日",
+  },
+  {
+    key: "week",
+    label: "周",
+  },
+  {
+    key: "month",
+    label: "月"
+  },
+  {
+    key: "quarter", 
+    label: "季", 
+  },
+  {
+    key: "halfYear", 
+    label: "年"
+  }
+]
+/** 时间定位相关逻辑 */
+const locationModule = {
+  locaTimeTranslate(translateX) {
+    this.translateX = translateX;
+  }
+};
+
 export default {
   name: "tsGantt",
   components: {
-    taskBar,
-    taskBarThumb
+    TaskBar,
+    TimeIndicator,
+    TaskBarThumb
   },
   data() {
     return {
@@ -208,6 +247,9 @@ export default {
     
     dayMonthList() {
       return [];
+    },
+    pxUnitAmp() {
+      return pxUnitAmp;
     }
   },
   methods: {
@@ -225,7 +267,6 @@ export default {
         this.showSelectionBar(event);
       }
     },
-
     /**
      * 根据选中行高度 显示对应条状工具条
      */
@@ -600,7 +641,9 @@ export default {
       });
 
       return list;
-    }
+    },
+
+    ...locationModule
   },
   watch: {
   },

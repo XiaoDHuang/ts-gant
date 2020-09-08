@@ -1,6 +1,6 @@
 <template>
   <div :class="sideClass" class="task-bar-thumb__2suT" :style="`top: ${top}px; left: ${left}px;`">
-    <button class="btn-type-subtle__1YDY btn-size-smaller__zaJ7" type="button" data-role="button">
+    <button class="btn-type-subtle__1YDY btn-size-smaller__zaJ7" @click="timeTranslateLocation" type="button" data-role="button">
       <div class="label__fdzT" v-if="type === 'right'" style="left: 0px;">{{label}}</div>
       <span class="icon__YImk icon dls-icon icon-triangle-right-s" data-role="icon"></span>
       <div class="label__fdzT" v-if="type === 'left'" style="left: 0px;">{{label}}</div>
@@ -31,6 +31,10 @@ export default {
       type: Number,
       default: 554810
     },
+    width: {
+      type: Number,
+      default: 30
+    }
   },
   computed: {
     left() {
@@ -61,6 +65,19 @@ export default {
       const right = this.translateX;
 
       return right - rightSide > 0 ? 'right' : 'left';
+    },
+    timeTranslateLocation() {
+      let translateX1 = this.viewTranslateX + (this.viewWidth / 2);
+      let translateX2 = this.translateX + this.width;
+
+      let diffX = Math.abs(translateX2 - translateX1);
+      let translateX = this.viewTranslateX + diffX;
+
+      if (this.type === 'left') {
+        translateX = this.viewTranslateX - diffX;
+      }
+
+      this.$emit('timeTranslateLocation', translateX);
     }
   }
 }

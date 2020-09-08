@@ -7,6 +7,7 @@
         class="body__3LBc gantt__3Xim"
         :width="viewWidth" 
         :height="viewHeight">
+        <div :class="{ scrolling__1B1k: guestureGrantBodyMove }" class="scroll-indicator__3aij" style="left: -8px; width: 8px;"></div>
         <header>
           <div ref="timeAxisRender" @wheel.prevent="wheel" class="time-axis__3meF" style="left: 0px; width: 1332px;">
             <div  class="render-chunk__28qu" :style="`transform: translateX(-${translateX}px;`">
@@ -113,6 +114,7 @@
           </div>
         </main>
         <time-indicator
+          :guestureGrantBodyMove="guestureGrantBodyMove"
           :viewTranslateX="translateX"
           :viewWidth="viewWidth"
           :pxUnitAmp="pxUnitAmp"
@@ -224,6 +226,7 @@ export default {
       dragToolShadowW: 128,
       isShadowGesturePress: false,
 
+      guestureGrantBodyMove: false,
       // 数据部分
       barList,
     };
@@ -314,7 +317,6 @@ export default {
       const basePointerX = isLeft ? startX + width : startX - width;
 
       const setBarShadowPosition = (moveEv) => {
-
         const pointerX = moveEv.center.x;
 
         this.showDragToolShadow = true;
@@ -525,7 +527,13 @@ export default {
     },
 
     wheel(event) {
+      if (this._wheelTimer) clearTimeout(this._wheelTimer);
+      this.guestureGrantBodyMove = true;
       this.translateX += event.deltaX;
+
+      this._wheelTimer = setTimeout(() => {
+        this.guestureGrantBodyMove = false;
+      }, 100);
     },
     getDurationAmp() {
       const clientWidth = this.viewWidth;
@@ -656,6 +664,7 @@ export default {
     },
 
     ...locationModule,
+
     initGrantBodyGesture() {
       const ganttBody = this.$refs.ganttBody;
       const gantBodyH = new Hammer(ganttBody);
@@ -663,7 +672,7 @@ export default {
 
       const panStart = () => {
         if (this.gestureKeyPress) return;
-
+        this.guestureGrantBodyMove = true;
         translateX = this.translateX;
       }
 
@@ -675,6 +684,7 @@ export default {
 
       const panEnd = (event) => {
         if (this.gestureKeyPress) return;
+        this.guestureGrantBodyMove = false;
         this.translateX = translateX - event.deltaX;
       }
 

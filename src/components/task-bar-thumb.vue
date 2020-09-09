@@ -7,7 +7,7 @@
   >
     <button class="btn-type-subtle__1YDY btn-size-smaller__zaJ7" @click="timeTranslateLocation" type="button" data-role="button">
       <div class="label__fdzT" v-if="type === 'right'" style="left: 0px;">{{label}}</div>
-      <span class="icon__YImk icon dls-icon icon-triangle-right-s" data-role="icon"></span>
+      <i class="icon__YImk icon dls-icon icon-triangle-right-s" data-role="icon"></i>
       <div class="label__fdzT" v-if="type === 'left'" style="left: 0px;">{{label}}</div>
     </button>
   </div>

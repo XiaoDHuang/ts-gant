@@ -1,5 +1,5 @@
 <template>
-  <div style="width: 1332px; height: 418px;margin: auto;">
+  <div>
     <tsGantt></tsGantt>
   </div>
 </template>

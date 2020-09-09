@@ -1,5 +1,5 @@
 <template>
-  <div class="gantt-app-view" style="height: 100%;width: 100%;">
+  <div class="gantt-app-view" :style="`width: ${viewWidth}px;height:${viewHeight}px;margin:auto;`">
     <div class="container__1PWP" style="box-sizing: content-box;">
       <div 
         ref="ganttBody" 
@@ -120,6 +120,12 @@
           :pxUnitAmp="pxUnitAmp"
           @timeTranslateLocation="locaTimeTranslate"
         ></time-indicator>
+        <time-axis-scale-select
+          v-model="viewTypeObj"
+          :viewWidth="viewWidth"
+          :view-type-list="viewTypeList" 
+          :defaultValue="viewTypeObj" 
+        ></time-axis-scale-select>
       </div>
     </div>  
   </div>
@@ -134,6 +140,7 @@ import isBetween from "dayjs/plugin/isBetween";
 import TaskBar from './task-bar';
 import TaskBarThumb from './task-bar-thumb';
 import TimeIndicator from './time-indicator.vue';
+import TimeAxisScaleSelect from './time-axis-scale-select.vue';
 
 import Hammer from 'hammerjs';
 
@@ -155,9 +162,10 @@ dayjs.extend(isBetween);
    width: width
  }
  type ColumnList = Column[]
-
-
 */
+
+const aTick = ("function" === typeof requestAnimationFrame) ? requestAnimationFrame : 
+  e => setTimeout(() => e(Date.now()), 1e3 / 60);
 
 const pxUnitAmp = (60 * 60 * 24 / 30) * 1000;
 const rowHeight = 28;
@@ -172,22 +180,27 @@ const viewTypeList = [
   {
     key: "day",
     label: "日",
+    value: 2880
   },
   {
     key: "week",
     label: "周",
+    value: 3600
   },
   {
     key: "month",
-    label: "月"
+    label: "月",
+    value: 14400
   },
   {
     key: "quarter", 
-    label: "季", 
+    label: "季",
+    value: 86400
   },
   {
     key: "halfYear", 
-    label: "年"
+    label: "年",
+    value: 64800
   }
 ]
 /** 时间定位相关逻辑 */
@@ -202,12 +215,15 @@ export default {
   components: {
     TaskBar,
     TimeIndicator,
-    TaskBarThumb
+    TaskBarThumb,
+    TimeAxisScaleSelect
   },
   data() {
     return {
       viewWidth: this.width,
       viewHeight: this.height,
+      viewTypeObj: viewTypeList[0],
+      viewTypeList,
       cellUnit: 30,
       wheelDis: 0,
       translateX: 552410,
@@ -382,12 +398,14 @@ export default {
         if (pointerDis > width) return; 
         if (width <= step) return;
 
-        this.dragToolShadowW = width;
-        this.dragToolShadowX = translateX;
-        this.shadowGestBarLeft = barLeft;
+        aTick(() => {
+          this.dragToolShadowW = width;
+          this.dragToolShadowX = translateX;
+          this.shadowGestBarLeft = barLeft;
 
-        barInfo.translateX = translateX;
-        barInfo.width = width;
+          barInfo.translateX = translateX;
+          barInfo.width = width;
+        });
       }
       /**
        * 跟随鼠标拖动扩大阴影
@@ -412,14 +430,16 @@ export default {
           barLeft = translateX + width;
         }
 
-        this.dragToolShadowW = width;
-        this.dragToolShadowX = translateX;
-        this.shadowGestBarLeft = barLeft;
+        aTick(() => {
+          this.dragToolShadowW = width;
+          this.dragToolShadowX = translateX;
+          this.shadowGestBarLeft = barLeft;
 
-        barInfo.translateX = translateX;
-        barInfo.width = width;
-      }
-  
+          barInfo.translateX = translateX;
+          barInfo.width = width;
+        })
+      };
+
       const panMove = (event) => {
         setBarShadowPosition(event)
       };
@@ -457,12 +477,14 @@ export default {
       let pointerX = 0;
 
       const layoutShadow = (width, translateX, barLeft, barRight) => {
-        this.dragToolShadowW = width;
-        this.dragToolShadowX = translateX;
-        this.shadowGestBarLeft = barLeft;
-        this.shadowGestBarRight = barRight;
+        aTick(() => {
+          this.dragToolShadowW = width;
+          this.dragToolShadowX = translateX;
+          this.shadowGestBarLeft = barLeft;
+          this.shadowGestBarRight = barRight;
 
-        barInfo.translateX = translateX;
+          barInfo.translateX = translateX;
+        });
       };
 
       const setBarShadowPosition = (event) => {

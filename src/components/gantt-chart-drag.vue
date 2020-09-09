@@ -551,7 +551,8 @@ export default {
     wheel(event) {
       if (this._wheelTimer) clearTimeout(this._wheelTimer);
       this.guestureGrantBodyMove = true;
-      this.translateX += event.deltaX;
+
+      aTick(() => this.translateX += event.deltaX);
 
       this._wheelTimer = setTimeout(() => {
         this.guestureGrantBodyMove = false;
@@ -700,8 +701,7 @@ export default {
 
       const panMove = (event) => {
         if (this.gestureKeyPress) return;
-
-        this.translateX = translateX - event.deltaX;
+        aTick(() => this.translateX = translateX - event.deltaX);
       }
 
       const panEnd = (event) => {

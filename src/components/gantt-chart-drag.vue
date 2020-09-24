@@ -176,6 +176,7 @@ const barList = [
   { translateY: 98, translateX: 554810, width: 120, label: '三体'},
 ];
 
+// 视图日视图、周视图、月视图、季视图、年视图
 const viewTypeList = [
   {
     key: "day",
@@ -200,9 +201,10 @@ const viewTypeList = [
   {
     key: "halfYear", 
     label: "年",
-    value: 64800
+    value: 345600 
   }
-]
+];
+
 /** 时间定位相关逻辑 */
 const locationModule = {
   locaTimeTranslate(translateX) {
@@ -223,7 +225,7 @@ export default {
       viewWidth: this.width,
       viewHeight: this.height,
       viewTypeObj: viewTypeList[0],
-      viewTypeList,
+      viewTypeList, 
       cellUnit: 30,
       wheelDis: 0,
       translateX: 552410,
@@ -275,6 +277,9 @@ export default {
     },
     pxUnitAmp() {
       return pxUnitAmp;
+    },
+    pxUnitAmp2() {
+      return 1;
     }
   },
   methods: {

@@ -12,7 +12,7 @@
           <div ref="timeAxisRender" @wheel.prevent="wheel" class="time-axis__3meF" style="left: 0px; width: 1332px;">
             <div  class="render-chunk__28qu" :style="`transform: translateX(-${translateX}px;`">
               <div 
-                v-for="(item, key) in getMonthYearListPx()" 
+                v-for="(item, key) in getMajorList()" 
                 :key="key" 
                 class="major__2rd6" 
                 :style="`width: ${item.width}px; left: ${item.left}px;`"
@@ -20,11 +20,11 @@
                 <div class="label__RLd1">{{item.label}}</div>
               </div>
               <div
-                v-for="(dayItem) in getdayMonthListPx()"
+                v-for="(dayItem) in getMinorList()"
                 class="minor__11Xd" 
                 :class="{weekends__1EmY: dayItem.isWeek}"
                 :key="dayItem.key"
-                :style="`width: 30px; left:${dayItem.left}px;`"
+                :style="`width: ${dayItem.width}px; left:${dayItem.left}px;`"
                >
                 <div class="label__RLd1">{{ dayItem.label }}</div>
               </div>
@@ -37,16 +37,6 @@
             v-show="showSelectionIndicator" 
             :style="`display: none; height: 28px; top: ${selectionIndicatorTop}px;`"
           ></div>
-          <!-- <div
-            ref="chartView"
-            @wheel.prevent="wheel"
-            @mouseup="shadowGesturePressup"
-            @mouseenter.prevent="onMouseEnter"
-            @mousemove.prevent="deOnMouseMove"
-            @mouseleave="showSelectionIndicator = false"
-            class="chart__3nGi" 
-            :style="`left:0px;height:${svgViewH}px;width:${viewWidth}px;`"
-          > -->
           <div
             ref="chartView"
             @wheel.prevent="wheel"
@@ -62,12 +52,12 @@
               version="1.1" 
               :width="viewWidth" 
               :height="svgViewH" 
-              :viewBox="`${translateX}.0076633333 0 ${viewWidth} ${svgViewH}`"
+              :viewBox="`${translateX} 0 ${viewWidth} ${svgViewH}`"
             >
-              <template v-for="(item) in getdayMonthListPx()">
+              <template v-for="(item) in getMinorList()">
                 <g v-if="item.isWeek" :key="item.key" stroke="#f0f0f0">
                   <path :d="`M${item.left}.5,0 L${item.left},${svgViewH}`"></path>
-                  <rect fill="#F7F7F7" opacity="0.5" stroke-width="0" :x="item.left" y="0" width="30" :height="svgViewH"></rect>
+                  <rect fill="#F7F7F7" opacity="0.5" stroke-width="0" :x="item.left" y="0" :width="item.width" :height="svgViewH"></rect>
                 </g>
                 <g v-else :key="item.key" stroke="#f0f0f0">
                   <path :d="`M${item.left}.5,0 L${item.left},${svgViewH}`"></path>
@@ -113,6 +103,7 @@
             </div>
           </div>
         </main>
+        
         <time-indicator
           :guestureGrantBodyMove="guestureGrantBodyMove"
           :viewTranslateX="translateX"
@@ -135,7 +126,13 @@
 import debounce from 'lodash/debounce';
 import dayjs from "dayjs"; // 导入日期js
 // const uuidv4 = require("uuid/v4"); // 导入uuid生成插件
+import weekOfYear from "dayjs/plugin/weekOfYear";
+import quarterOfYear from "dayjs/plugin/quarterOfYear";
 import isBetween from "dayjs/plugin/isBetween";
+import advancedFormat from "dayjs/plugin/advancedFormat";
+import isLeapYear from "dayjs/plugin/isLeapYear";
+import weekday from 'dayjs/plugin/weekday';
+
 // import weekday from 'dayjs/plugin/weekday';
 import TaskBar from './task-bar';
 import TaskBarThumb from './task-bar-thumb';
@@ -144,13 +141,19 @@ import TimeAxisScaleSelect from './time-axis-scale-select.vue';
 
 import Hammer from 'hammerjs';
 
-
 import '@/assets/css/icons.css';
 import '@/assets/css/cds.css';
 import '@/assets/css/gantt.css';
 
-dayjs.extend(isBetween);
 
+dayjs.extend(weekday)
+dayjs.extend(weekOfYear);
+dayjs.extend(quarterOfYear);
+dayjs.extend(advancedFormat);
+dayjs.extend(isBetween);
+dayjs.extend(isLeapYear);
+
+window.dayjs = dayjs;
 // console.log(TimeIndicator, '>>>>>>>');
 /*
  **************定义字段类型****************
@@ -167,7 +170,7 @@ dayjs.extend(isBetween);
 const aTick = ("function" === typeof requestAnimationFrame) ? requestAnimationFrame : 
   e => setTimeout(() => e(Date.now()), 1e3 / 60);
 
-const pxUnitAmp = (60 * 60 * 24 / 30) * 1000;
+// const pxUnitAmp = (60 * 60 * 24 / 30) * 1000;
 const rowHeight = 28;
 
 const barList = [
@@ -175,6 +178,8 @@ const barList = [
   { translateY: 70, translateX: 554810, width: 120, label: '阅读喜欢的📚' },
   { translateY: 98, translateX: 554810, width: 120, label: '三体'},
 ];
+
+const startDate = '2020-07-01';
 
 // 视图日视图、周视图、月视图、季视图、年视图
 const viewTypeList = [
@@ -186,7 +191,7 @@ const viewTypeList = [
   {
     key: "week",
     label: "周",
-    value: 3600
+    value: 3600 
   },
   {
     key: "month",
@@ -201,7 +206,7 @@ const viewTypeList = [
   {
     key: "halfYear", 
     label: "年",
-    value: 345600 
+    value: 115200
   }
 ];
 
@@ -221,15 +226,17 @@ export default {
     TimeAxisScaleSelect
   },
   data() {
+    const viewTypeObj = viewTypeList[0];
+    const translateX = dayjs(startDate).valueOf() / (viewTypeObj.value * 1000);
+
     return {
       viewWidth: this.width,
       viewHeight: this.height,
-      viewTypeObj: viewTypeList[0],
       viewTypeList, 
       cellUnit: 30,
       wheelDis: 0,
-      translateX: 552410,
-      format: 'YYYY年 MM月',
+      translateX, 
+      viewTypeObj,
 
       selectionIndicatorTop: 0,
       showSelectionIndicator: false,
@@ -257,7 +264,7 @@ export default {
     height: {
       type: Number,
       default: 418,
-    }
+    },
   },
   computed: {
     svgViewH() {
@@ -268,19 +275,12 @@ export default {
      */
     translateAmp() {
       const translateX = this.translateX;
-      const timeamp = pxUnitAmp * translateX;
+      const timeamp = this.pxUnitAmp * translateX;
       return timeamp;
     },
-    
-    dayMonthList() {
-      return [];
-    },
     pxUnitAmp() {
-      return pxUnitAmp;
+      return this.viewTypeObj.value * 1000;
     },
-    pxUnitAmp2() {
-      return 1;
-    }
   },
   methods: {
     /** 
@@ -563,16 +563,18 @@ export default {
         this.guestureGrantBodyMove = false;
       }, 100);
     },
+
     getDurationAmp() {
       const clientWidth = this.viewWidth;
-      return pxUnitAmp * clientWidth; 
+      return this.pxUnitAmp * clientWidth; 
     },
+
     /**
      *  获取可视区域月份
      */
     getMonthYearList() {
-      const translateAmp = this.translateAmp;
-      const endAmp = translateAmp + this.getDurationAmp();
+      const translateAmp = dayjs(startDate).valueOf();
+      const endAmp = this.translateAmp + this.getDurationAmp();
       const format = this.format;
       // 初始化当前时间
       let curDate = dayjs(translateAmp);
@@ -590,7 +592,7 @@ export default {
         }
 
         // 获取下次迭代的时间
-        let iterDate = curDate.add(pxUnitAmp, 'millisecond');
+        let iterDate = curDate.add(this.pxUnitAmp, 'millisecond');
         let iterMonth = iterDate.$M;
 
         // 设置当前月份最后时间
@@ -608,7 +610,7 @@ export default {
       // 把最后一个月时间迭代结束
       let iter = true;
       while( iter ) {
-        let iterDate = endDate.add(pxUnitAmp, 'millisecond');
+        let iterDate = endDate.add(this.pxUnitAmp, 'millisecond');
         if (iterDate.$M !== endMonth) {
           iter = false;
           break;
@@ -636,9 +638,9 @@ export default {
         const endDate = item.endDate;
         const label = item.label;
 
-        let left = (startDate.valueOf() / pxUnitAmp); 
+        let left = (startDate.valueOf() / this.pxUnitAmp); 
         // let width = 900;
-        let width = (endDate.valueOf() - startDate.valueOf()) / pxUnitAmp;
+        let width = (endDate.valueOf() - startDate.valueOf()) / this.pxUnitAmp;
 
         return {
           label,
@@ -667,7 +669,7 @@ export default {
           })
         }
 
-        curDate = curDate.add(pxUnitAmp, 'millisecond');
+        curDate = curDate.add(this.pxUnitAmp, 'millisecond');
       }
 
       return [ ...dayMap.values() ];
@@ -678,7 +680,7 @@ export default {
       const list = dayMonthList.map(item => {
         let date = item.date.hour(0).minute(0).second(0);
         let label = item.label;
-        let left = date.valueOf() / pxUnitAmp;
+        let left = date.valueOf() / this.pxUnitAmp;
         let isWeek = [0, 6].includes(date.$W);
 
         return {
@@ -691,6 +693,243 @@ export default {
       return list;
     },
 
+    /**
+     * 获取可视区域的周视图
+     */
+    getWeekMonthList() {
+    },
+    getWeekMonthListPx() {
+    },
+
+    getMajorList() {
+      const majorFormatMap = {
+        'day': 'YYYY年 MM月',
+        'week': 'YYYY年 MM月',
+        'month': 'YYYY年',
+        'quarter': 'YYYY年',
+        'halfYear': 'YYYY年',
+      };
+
+      const translateAmp = this.translateAmp;
+      const endAmp = translateAmp + this.getDurationAmp();
+      const key = this.viewTypeObj.key;
+      const format = majorFormatMap[key];
+
+      const getNextDate = (start) => {
+        if (key === 'day' || key === 'week') {
+          return start.add(1, 'month');
+        } else {
+          return start.add(1, 'year');
+        }
+      }
+
+      const setStart = (datejs) => {
+        if (key === 'day' || key === 'week') {
+          return datejs.startOf('month');
+        } else {
+          return datejs.startOf('year');
+        }
+      }
+
+      const setEnd = (start) => {
+        if (key === 'day' || key === 'week') {
+          return start.endOf('month');
+        } else {
+          return start.endOf('year');
+        }
+      }
+      
+      // 初始化当前时间
+      let curDate = dayjs(translateAmp);
+      let dateMap = new Map(); 
+
+      // 对可视区域内的时间进行迭代
+      while(curDate.isBetween(translateAmp - 1, endAmp + 1)) {
+        let majorKey = curDate.format(format);
+        let start = curDate;
+        let end = setEnd(start);
+
+        if (dateMap.size !== 0 ) {
+          start = setStart(curDate);
+        }
+
+        if (!dateMap.has(majorKey)) {
+          dateMap.set(majorKey, {
+            label: majorKey,
+            startDate: start,
+            endDate: end 
+          });
+        }
+
+        // 获取下次迭代的时间
+        start = setStart(curDate);
+        curDate = getNextDate(start);
+      }
+
+      return this.majorAmp2Px([ ...dateMap.values() ]);
+    },
+    getMinorList() {
+      const minorFormatMap = {
+        'day': 'YYYY-MM-D',
+        'week': 'YYYY-w周',  // format W 不知道为什么不支持周，文档却说支持,
+        'month': 'YYYY-MM月',
+        'quarter': 'YYYY-第Q季',
+        'halfYear': 'YYYY-',
+      };
+      const fstHalfYear = [0, 1, 2, 3, 4, 5];
+
+      const startAmp = this.translateAmp;
+      const endAmp = startAmp + this.getDurationAmp();
+      const format = minorFormatMap[this.viewTypeObj.key];
+
+      const getNextDate = (start) => {
+        const map = {
+          day() {
+            return start.add(1, 'day');
+          },
+          week() {
+            return start.add(1, 'week');
+          },
+          month() {
+            return start.add(1, 'month');
+          },
+          quarter() {
+            return start.add(1, 'quarter');
+          },
+          halfYear() {
+            return start.add(6, 'month');
+          }
+        }
+
+        return (map[this.viewTypeObj.key])();
+      }
+      const setStart = (datejs) => {
+        const map = {
+          day() {
+            return datejs.startOf('day');
+          },
+          week() {
+            return datejs.weekday(1).hour(0).minute(0).second(0);
+          },
+          month() {
+            return datejs.startOf('month');
+          },
+          quarter() {
+            return datejs.startOf('quarter');
+          },
+          halfYear() {
+            if (fstHalfYear.includes(datejs.month())) { 
+              return datejs.month(0).startOf('month');
+            } else {
+              return datejs.month(6).startOf('month');
+            }
+          }
+        }
+
+        return (map[this.viewTypeObj.key])();
+      }
+      const setEnd = (start) => {
+        const map = {
+          day() {
+            return start.endOf('day');
+          },
+          week() {
+            return start.weekday(7).hour(23).minute(59).second(59);
+          },
+          month() {
+            return start.endOf('month');
+          },
+          quarter() {
+            return start.endOf('quarter');
+          },
+          halfYear() {
+            if (fstHalfYear.includes(start.month())) { 
+              return start.month(5).endOf('month');
+            } else {
+              return start.month(11).endOf('month');
+            }
+          }
+        }
+
+        return (map[this.viewTypeObj.key])();
+      }
+      const getMinorKey = (datejs) => {
+        if (this.viewTypeObj.key === 'halfYear') {
+          return datejs.format(format) + (fstHalfYear.includes(datejs.month()) ? '上半年' : '下半年');
+        }
+
+        return datejs.format(format);
+      } 
+
+      // 初始化当前时间
+      let curDate = dayjs(startAmp);
+      let dateMap = new Map(); 
+      
+      while(curDate.isBetween(startAmp - 1, endAmp + 1)) {
+        let minorKey = getMinorKey(curDate);
+
+        let start = setStart(curDate);
+        let end = setEnd(start);
+        if (!dateMap.has(minorKey)) {
+          dateMap.set(minorKey, {
+            label: minorKey.split('-').pop(),
+            startDate: start,
+            endDate: end,
+            key: end 
+          })
+        }
+
+        curDate = getNextDate(start);
+      }
+
+      return this.minorAmp2Px([ ...dateMap.values() ]);
+    },
+    majorAmp2Px(ampList) {
+      const pxUnitAmp = this.pxUnitAmp;
+      // for(let i = 0)
+      const list = ampList.map(item => {
+        const startDate = item.startDate;
+        const endDate = item.endDate;
+        const label = item.label;
+
+        let left = (startDate.valueOf() / pxUnitAmp); 
+        let width = (endDate.valueOf() - startDate.valueOf()) / pxUnitAmp;
+
+        return {
+          label,
+          left,
+          width
+        }
+      });
+      
+      return list;
+    },
+    minorAmp2Px(ampList) {
+      const pxUnitAmp = this.pxUnitAmp;
+
+      const list = ampList.map(item => {
+        let startDate = item.startDate.hour(0).minute(0).second(0);
+        let endDate = item.endDate.hour(23).minute(59).second(59);
+
+        let label = item.label;
+        let left = Math.ceil(startDate.valueOf() / pxUnitAmp);
+        let width = Math.ceil((endDate.valueOf() - startDate.valueOf()) / pxUnitAmp);
+
+        let isWeek = false;
+        if (this.viewTypeObj.key === 'day') {
+          isWeek = [0, 6].includes(startDate.$W);
+        }
+
+        return {
+          label,
+          left,
+          width,
+          isWeek
+        }
+      });
+
+      return list;
+    },
     ...locationModule,
 
     initGrantBodyGesture() {
@@ -721,11 +960,16 @@ export default {
     },
   },
   watch: {
+    viewTypeObj(old, val) {
+      this.translateX = dayjs(startDate).valueOf() / (this.viewTypeObj.value * 1000);
+      // console.log(this.getMajorList());
+    }
   },
   created() {
     this.deOnMouseMove = debounce(this.onMouseMove, 5)
   },
   mounted() {
+    console.log(this);
     this.initGrantBodyGesture();
 
     const chartView = this.$refs.chartView;

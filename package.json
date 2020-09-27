@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "core-js": "^2.6.5",
-    "dayjs": "^1.8.16",
+    "dayjs": "^1.8.36",
     "element-ui": "^2.13.2",
     "hammerjs": "^2.0.8",
     "lodash": "^4.17.20",

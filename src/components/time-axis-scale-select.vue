@@ -4,7 +4,7 @@
       <div class="text__2O4S">{{value.label}}视图</div>
       <span class="icon next-icon icon-triangle-down-s next-medium"></span>
     </div>
-    <div class="shadow__3n0C"></div>
+    <div class="shadow__3n0C" :class="{scrolling__2c3k: guestureGrantBodyMove}"></div>
     <div v-if="!isHide" class="next-overlay-wrapper opened">
       <div class="next-loading next-loading-inline next-overlay-inner next-select-loading next-select-single-menu"
         aria-hidden="false" :style="`position: absolute; left: ${left}px; top: ${top}px;`">
@@ -61,6 +61,10 @@ export default {
       default() {
         return {}
       }
+    },
+    guestureGrantBodyMove: {
+      type: Boolean,
+      default: false,
     }
   },
   directives: { Clickoutside },

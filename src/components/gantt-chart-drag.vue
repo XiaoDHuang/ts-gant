@@ -92,7 +92,9 @@
                   :label="bar.label"
                   :width="bar.width"
                   :translateX="bar.translateX" 
-                  :translateY="bar.translateY" 
+                  :translateY="bar.translateY"
+                  :stepGesture="bar.stepGesture"
+                  :dateTextFormat="bar.dateTextFormat"
                   :showDragBar="getShowBar(bar.translateY, selectionIndicatorTop)"
                   @gesturePress="(event, type) => shadowGesturePress(event, type, bar)" 
                   @gesturePressup="(event, type) => shadowGesturePressup(event, type, bar)"
@@ -113,6 +115,7 @@
         ></time-indicator>
         <time-axis-scale-select
           v-model="viewTypeObj"
+          :guestureGrantBodyMove="guestureGrantBodyMove"
           :viewWidth="viewWidth"
           :view-type-list="viewTypeList" 
           :defaultValue="viewTypeObj" 
@@ -354,6 +357,11 @@ export default {
       const height = 8;
       const baseTop = 14;
       const topStep = 28;
+      
+      // TODO 后期需优化 增加上周下周等内容
+      const dateTextFormat = (startX) => {
+        return dayjs(startX * pxUnitAmp).format('YYYY-MM-DD');
+      }
 
       return dataList.map((item, index) => {
         let startAmp = dayjs(item.startDate).valueOf();
@@ -375,6 +383,8 @@ export default {
           width,
           height,
           label: item.content,
+          stepGesture: 'end', // start(开始）、moving(移动)、end(结束)
+          dateTextFormat,  //TODO 日期格式化函数 后期根据当前时间格式化为上周下周
         }
       })
     },
@@ -478,7 +488,6 @@ export default {
       this.shadowGestBarLeft = barLeft;
       this.isPointerPress = true;
 
-
       const sideType = type;
       const isLeft = sideType === 'left';
       // const step = getMoveStep(isLeft);
@@ -502,7 +511,7 @@ export default {
 
         // 每次step可能不一样， 动态计算 如：每月可能30或31天
         const step = getMoveStep(isLeft, isShrink, barInfo);
-        console.log(step, '>>>>>>>>>>>>');
+        // console.log(step, '>>>>>>>>>>>>');
 
         if (isShrink) {
           moveShrinkStep(moveDis, step, pointerX);
@@ -563,6 +572,7 @@ export default {
 
           barInfo.translateX = translateX;
           barInfo.width = width;
+          barInfo.stepGesture = 'moving';
         });
       }
       /**
@@ -594,22 +604,31 @@ export default {
 
           barInfo.translateX = translateX;
           barInfo.width = width;
+          barInfo.stepGesture = 'moving';
         })
+      };
+
+      const panStart = () => {
+        barInfo.stepGesture = 'start';
       };
 
       const panMove = (event) => {
         setBarShadowPosition(event)
       };
+
       const panEnd = () => {
         this.isPointerPress = false;
         this.showDragToolShadow = false;
 
+        this.chartHammer.off('panstart', panStart);
         this.chartHammer.off('panmove', panMove);
         this.chartHammer.off('panend', panEnd);
         this.shadowGestBarLeft = 0;
         this.shadowGestBarRight = 0;
+        barInfo.stepGesture = 'end';
       }
 
+      this.chartHammer.on('panstart', panStart);
       this.chartHammer.on('panmove', panMove);
       this.chartHammer.on('panend', panEnd);
     },
@@ -656,6 +675,7 @@ export default {
           barRight = translateX + width;
           layoutShadow(width, translateX, barLeft, barRight);
           startX = startX + moveX;
+          barInfo.stepGesture = 'moving';
         }
       };
 
@@ -663,6 +683,7 @@ export default {
 
       const panStart = (event) => {
         startX = event.center.x;
+        barInfo.stepGesture = 'start';
       };
 
       const panMove = (event) => {
@@ -677,14 +698,16 @@ export default {
         this.chartHammer.off('panend', panEnd);
         this.shadowGestBarLeft = 0;
         this.shadowGestBarRight = 0;
+        barInfo.stepGesture = 'end';
       }
       
       this.chartHammer.on('panstart', panStart);
       this.chartHammer.on('panmove', panMove);
       this.chartHammer.on('panend', panEnd);
     },
-    shadowGestureBarPressup() {
+    shadowGestureBarPressup(event, barInfo) {
       this.gestureKeyPress = false;
+      barInfo.stepGesture = 'end';
     },
     /**
      * 计算位置

@@ -6,7 +6,7 @@
   >
     <div>
       <template v-if="showDragBar">
-        <div class="dependency-handle__1Idl" style="left: -34px; width: 12px;">
+        <div v-if="stepGesture !== 'moving'" class="dependency-handle__1Idl" style="left: -34px; width: 12px;">
           <svg width="12px" height="12px" viewBox="0 0 12 12" version="1.1">
             <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
               <circle class="outer__3o8A" stroke="#87D2FF" fill="#FFFFFF" cx="6" cy="6" r="5.5">
@@ -15,7 +15,7 @@
             </g>
           </svg>
         </div>
-        <div class="dependency-handle__1Idl right__1vCc" :style="`left: ${width + 28}px; width: 12px;`">
+        <div v-if="stepGesture !== 'moving'" class="dependency-handle__1Idl right__1vCc" :style="`left: ${width + 28}px; width: 12px;`">
           <svg width="12px" height="12px" viewBox="0 0 12 12" version="1.1">
             <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
               <circle class="outer__3o8A" stroke="#87D2FF" fill="#FFFFFF" cx="6" cy="6" r="5.5"></circle>
@@ -58,7 +58,9 @@
         </svg>
       </div>
     </div>
-  <div class="label__fdzT icon" :style="`left:${width + 45}px;`">{{label}}</div>
+  <div v-if="stepGesture !== 'moving'" class="label__fdzT icon" :style="`left:${width + 45}px;`">{{label}}</div>
+  <div v-if="stepGesture === 'moving'" class="date-text__3DHM" :style="`left: ${width + 16}px;`">{{dateTextFormat(translateX + width)}}</div>
+  <div v-if="stepGesture === 'moving'" class="date-text__3DHM" :style="`right: ${width + 16}px;`">{{dateTextFormat(translateX)}}</div>
   </div>
 </template>
 <script>
@@ -95,9 +97,17 @@ export default {
       type: Number,
       default: 88
     },
+    stepGesture: {
+      type: String,
+      default: 'end',
+    },
+    dateTextFormat: {
+      type: Function,
+      default: () => '',
+    },
     resizeHander: {
       type: Function,
-      default: () => {}
+      default: () => {},
     }
   },
   data() {

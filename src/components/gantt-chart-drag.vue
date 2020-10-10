@@ -173,11 +173,52 @@ const aTick = ("function" === typeof requestAnimationFrame) ? requestAnimationFr
 // const pxUnitAmp = (60 * 60 * 24 / 30) * 1000;
 const rowHeight = 28;
 
-const barList = [
-  { translateY: 42, translateX: 554780, width: 90, label: '绘制表盘设计逻辑' },
-  { translateY: 70, translateX: 554810, width: 120, label: '阅读喜欢的📚' },
-  { translateY: 98, translateX: 554810, width: 120, label: '三体'},
+// const barList = [
+//   { translateY: 42, translateX: 554780, width: 90, label: '绘制表盘设计逻辑' },
+//   { translateY: 70, translateX: 554810, width: 120, label: '阅读喜欢的📚' },
+//   { translateY: 98, translateX: 554810, width: 120, label: '三体'},
+// ];
+
+const dataList = [
+  {
+    executor: null,
+    content: '绘制表盘设计逻辑',
+    startDate: '2020-07-01 08:02:02',
+    endDate: '2020-07-02', 
+  },
+  {
+    executor: null,
+    content: '甘特图实现',
+    startDate: '2016-12-01',
+    endDate: '2016-12-31', 
+  },
+  {
+    executor: null,
+    content: '阅读喜欢的书📚',
+    startDate: '2020-08-18',
+    endDate: '2020-08-19', 
+  },
+  {
+    executor: null,
+    content: '三体',
+    startDate: '2020-08-20',
+    endDate: '2020-08-25', 
+  },
+  {
+    executor: null,
+    content: '预订纪念日餐厅',
+    startDate: '2020-07-01',
+    endDate: '2020-09-06', 
+  },
+  {
+    executor: null,
+    content: '绘制表盘设计逻辑"',
+    startDate: '2020-08-20',
+    endDate: '2020-09-06', 
+  },
 ];
+
+// console.log(dataList);
 
 const startDate = '2020-07-01';
 
@@ -253,7 +294,7 @@ export default {
 
       guestureGrantBodyMove: false,
       // 数据部分
-      barList,
+      barList: [],
     };
   },
   props: {
@@ -307,6 +348,36 @@ export default {
       return isShow;
     },
    
+    getBarList() {
+      const pxUnitAmp = this.pxUnitAmp;
+      const minStamp = 11 * pxUnitAmp;
+      const height = 8;
+      const baseTop = 14;
+      const topStep = 28;
+
+      return dataList.map((item, index) => {
+        let startAmp = dayjs(item.startDate).valueOf();
+        let endAmp = dayjs(item.endDate).valueOf();
+
+        // 开始结束日期相同默认一天
+        if (Math.abs(endAmp - startAmp) < minStamp) {
+          startAmp = dayjs(item.startDate).valueOf();
+          endAmp = dayjs(item.endDate).add(minStamp, 'millisecond').valueOf();
+        }
+
+        let width = (endAmp - startAmp ) / pxUnitAmp;
+        let translateX = startAmp / pxUnitAmp;
+        let translateY = baseTop + index * topStep;
+
+        return {
+          translateX,
+          translateY,
+          width,
+          height,
+          label: item.content,
+        }
+      })
+    },
     /**
      * 是否显示任务条状图 
      */
@@ -321,20 +392,98 @@ export default {
      */
     shadowGesturePress(event, type, barInfo) {
       this.gestureKeyPress = true;
-      const { translateX, width } = barInfo;
-      let barLeft = (type === 'left') ? translateX : translateX + width;
 
+      // 移动空隙参数
+      const space = 5;
+      const { translateX, width } = barInfo;
+
+      const getMoveStep = (isLeft, isShrink, barInfo) => {
+        const { translateX, width } = barInfo;
+        const startX = isLeft ? translateX : translateX + width;
+        const startDate = dayjs(startX * this.pxUnitAmp);
+
+        const getDayStep = () => {
+          let endDate = startDate.startOf('day');
+          if ((isLeft && isShrink) || (!isLeft && !isShrink)) {
+            endDate = endDate.endOf('day');
+          }
+
+          let step = 24 * 60 * 60 * 1000 / this.pxUnitAmp;
+          let diff = Math.abs(endDate.valueOf() / this.pxUnitAmp - startX)
+          if (diff > space) {
+            step = diff;
+          }
+
+          return step;
+        }
+        const getWeekStep = () => {
+          let endDate = startDate.weekday(1).hour(0).minute(0).second(0);
+          if ((isLeft && isShrink) || (!isLeft && !isShrink)) {
+            endDate = endDate.weekday(7).hour(23).minute(59).second(59);
+          }
+          
+          let step = 7 * 24 * 60 * 60 * 1000 / this.pxUnitAmp;
+          let diff = Math.abs(endDate.valueOf() / this.pxUnitAmp - startX);
+          if (diff > space) {
+            step = diff;
+          }
+
+          return step;
+        }
+        const getMonthStep = () => {
+          let month = -1;
+          let endDate2 = startDate.startOf('month');
+          // 向右侧移动
+          if ((isLeft && isShrink) || (!isLeft && !isShrink)) {
+            month = 1;
+            endDate2 = startDate.endOf('month');
+          }
+
+          const endDate = startDate.add(month, 'month');
+          let step = Math.abs(endDate.valueOf() / this.pxUnitAmp - startX);
+
+          const diff = Math.abs(endDate2.valueOf() / this.pxUnitAmp - startX);
+          if (diff > 5) {
+            step = diff;
+          }
+
+          return step;
+        }
+
+        const map = {
+          day() {
+            return getDayStep();
+          },
+          week() {
+            return getWeekStep();
+          },
+          month() {
+            return getWeekStep();
+          },
+          quarter() {
+            return getMonthStep();
+          },
+          halfYear() {
+            return getMonthStep();
+          }
+        }
+        
+        const step = map[this.viewTypeObj.key]();
+        return step;
+      }      
+
+      let barLeft = (type === 'left') ? translateX : translateX + width;
       this.dragToolShadowX = translateX;
       this.dragToolShadowW = width;
       this.shadowGestBarLeft = barLeft;
-
       this.isPointerPress = true;
+
+
       const sideType = type;
-      const step = this.cellUnit;
       const isLeft = sideType === 'left';
+      // const step = getMoveStep(isLeft);
       const clientRect = event.target.getBoundingClientRect();
       const startX = isLeft ? clientRect.right : clientRect.left;
-
       const basePointerX = isLeft ? startX + width : startX - width;
 
       const setBarShadowPosition = (moveEv) => {
@@ -350,6 +499,10 @@ export default {
         } 
 
         const moveDis = getShadowMoveDis(startX, pointerX);
+
+        // 每次step可能不一样， 动态计算 如：每月可能30或31天
+        const step = getMoveStep(isLeft, isShrink, barInfo);
+        console.log(step, '>>>>>>>>>>>>');
 
         if (isShrink) {
           moveShrinkStep(moveDis, step, pointerX);
@@ -416,7 +569,6 @@ export default {
        * 跟随鼠标拖动扩大阴影
        */
       const moveExpandStep = (moveDis, step, pointerX) => {
-        const space = 5;
 
         let translateX = this.dragToolShadowX;
         let width = this.dragToolShadowW;
@@ -568,139 +720,6 @@ export default {
       const clientWidth = this.viewWidth;
       return this.pxUnitAmp * clientWidth; 
     },
-
-    /**
-     *  获取可视区域月份
-     */
-    getMonthYearList() {
-      const translateAmp = dayjs(startDate).valueOf();
-      const endAmp = this.translateAmp + this.getDurationAmp();
-      const format = this.format;
-      // 初始化当前时间
-      let curDate = dayjs(translateAmp);
-      let curMonth = curDate.$M;
-      let dateMap = new Map(); 
-
-      // 对可视区域内的时间进行迭代
-      while(curDate.isBetween(translateAmp - 1, endAmp + 1)) {
-        let monthKey = curDate.format(format);
-        if (!dateMap.has(monthKey)) {
-          dateMap.set(monthKey, {
-            label: monthKey,
-            startDate: curDate,
-          });
-        }
-
-        // 获取下次迭代的时间
-        let iterDate = curDate.add(this.pxUnitAmp, 'millisecond');
-        let iterMonth = iterDate.$M;
-
-        // 设置当前月份最后时间
-        if (iterMonth !== curMonth) {
-          dateMap.get(monthKey).endDate = curDate.hour(23).minute(59).second(59);
-        }
-
-        // 记录迭代时间
-        curDate = iterDate;
-        curMonth = iterMonth;
-      }
-
-      let endMonth = curDate.$M;
-      let endDate = curDate;
-      // 把最后一个月时间迭代结束
-      let iter = true;
-      while( iter ) {
-        let iterDate = endDate.add(this.pxUnitAmp, 'millisecond');
-        if (iterDate.$M !== endMonth) {
-          iter = false;
-          break;
-        }
-
-        endDate = iterDate;
-      }
-
-      let monthKey = endDate.format(format);
-      if (dateMap.has(monthKey)) {
-        dateMap.get(monthKey).endDate = endDate.hour(23).minute(59).second(59);
-      } 
-
-      return [ ...dateMap.values() ]
-    },
-    /**
-     * 获取可视区域月份排版数据
-     */
-    getMonthYearListPx() {
-      const monthYearList = this.getMonthYearList();
-      
-      // for(let i = 0)
-      const list = monthYearList.map(item => {
-        const startDate = item.startDate;
-        const endDate = item.endDate;
-        const label = item.label;
-
-        let left = (startDate.valueOf() / this.pxUnitAmp); 
-        // let width = 900;
-        let width = (endDate.valueOf() - startDate.valueOf()) / this.pxUnitAmp;
-
-        return {
-          label,
-          left,
-          width
-        }
-      });
-      
-      return list;
-    },
-    getdayMonthList() {
-      const startAmp = this.translateAmp;
-      const endAmp = startAmp + this.getDurationAmp();
-      const format = 'YYYY-MM-DD';
-      // 初始化当前时间
-      let curDate = dayjs(startAmp);
-      let dayMap = new Map(); 
-      
-      while(curDate.isBetween(startAmp - 1, endAmp + 1)) {
-        let dayKey = curDate.format(format);
-        if (!dayMap.has(dayKey)) {
-          dayMap.set(dayKey, {
-            label: curDate.$D,
-            date: curDate,
-            key: dayKey
-          })
-        }
-
-        curDate = curDate.add(this.pxUnitAmp, 'millisecond');
-      }
-
-      return [ ...dayMap.values() ];
-    },
-    getdayMonthListPx() {
-      const dayMonthList = this.getdayMonthList();
-
-      const list = dayMonthList.map(item => {
-        let date = item.date.hour(0).minute(0).second(0);
-        let label = item.label;
-        let left = date.valueOf() / this.pxUnitAmp;
-        let isWeek = [0, 6].includes(date.$W);
-
-        return {
-          label,
-          left,
-          isWeek
-        }
-      });
-
-      return list;
-    },
-
-    /**
-     * 获取可视区域的周视图
-     */
-    getWeekMonthList() {
-    },
-    getWeekMonthListPx() {
-    },
-
     getMajorList() {
       const majorFormatMap = {
         'day': 'YYYY年 MM月',
@@ -960,8 +979,9 @@ export default {
     },
   },
   watch: {
-    viewTypeObj(old, val) {
+    viewTypeObj() {
       this.translateX = dayjs(startDate).valueOf() / (this.viewTypeObj.value * 1000);
+      this.barList = this.getBarList();
       // console.log(this.getMajorList());
     }
   },
@@ -970,8 +990,9 @@ export default {
   },
   mounted() {
     console.log(this);
-    this.initGrantBodyGesture();
+    this.barList = this.getBarList();
 
+    this.initGrantBodyGesture();
     const chartView = this.$refs.chartView;
     this.chartHammer = new Hammer(chartView);
     this.chartHammer.options.domEvents = true;

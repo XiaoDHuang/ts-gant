@@ -22,11 +22,15 @@
               <div
                 v-for="(dayItem) in getMinorList()"
                 class="minor__11Xd" 
-                :class="{weekends__1EmY: dayItem.isWeek}"
+                :class="{
+                  weekends__1EmY: dayItem.isWeek, 
+                  highlight__3NdW: dayItem.isHighlight && viewTypeObj.key === 'day'
+                }"
                 :key="dayItem.key"
                 :style="`width: ${dayItem.width}px; left:${dayItem.left}px;`"
                >
                 <div class="label__RLd1">{{ dayItem.label }}</div>
+                <div v-if="dayItem.isHighlight && viewTypeObj.key === 'day'" class="highlight-bg__1mPp"></div>
               </div>
             </div>
           </div>
@@ -58,9 +62,11 @@
                 <g v-if="item.isWeek" :key="item.key" stroke="#f0f0f0">
                   <path :d="`M${item.left}.5,0 L${item.left},${svgViewH}`"></path>
                   <rect fill="#F7F7F7" opacity="0.5" stroke-width="0" :x="item.left" y="0" :width="item.width" :height="svgViewH"></rect>
+                  <rect v-if="item.isHighlight" fill="#FFA941" opacity="0.3" stroke-width="0" :x="item.highlightX" y="0" :width="item.highlightW" :height="svgViewH"></rect>
                 </g>
                 <g v-else :key="item.key" stroke="#f0f0f0">
                   <path :d="`M${item.left}.5,0 L${item.left},${svgViewH}`"></path>
+                  <rect v-if="item.isHighlight" fill="#FFA941" opacity="0.3" stroke-width="0" :x="item.highlightX" y="0" :width="item.highlightW" :height="svgViewH"></rect>
                 </g>
               </template>
               <g
@@ -948,6 +954,13 @@ export default {
     },
     minorAmp2Px(ampList) {
       const pxUnitAmp = this.pxUnitAmp;
+      const curDate = dayjs().startOf('day');
+      let highlightW = 4;
+      let highlightX = curDate.valueOf() / pxUnitAmp;
+      if(this.viewTypeObj.key === 'day') {
+        highlightW = 8;
+        highlightX = highlightX + 11;
+      }
 
       const list = ampList.map(item => {
         let startDate = item.startDate.hour(0).minute(0).second(0);
@@ -962,11 +975,22 @@ export default {
           isWeek = [0, 6].includes(startDate.$W);
         }
 
+        let isHighlight = false;
+        let curSt = curDate.valueOf();
+        let startSt = startDate.valueOf();
+        let endSt = endDate.valueOf();
+        if(curSt >= startSt && curSt <= endSt) {
+          isHighlight = true;
+        } 
+
         return {
           label,
           left,
           width,
-          isWeek
+          isWeek,
+          isHighlight,
+          highlightW,
+          highlightX,
         }
       });
 

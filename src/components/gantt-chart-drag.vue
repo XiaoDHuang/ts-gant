@@ -82,7 +82,7 @@
             <div class="render-chunk__22Ez" :style="`height: 178px; transform:translateX(-${translateX}px;`">
               <template v-for="(bar, index) in barList" >
                 <task-bar-thumb
-                  v-if="getshowTaskBar(bar.width, bar.translateX, translateX)"
+                  v-if="getshowTaskBar(bar.width, bar.translateX, translateX) && !bar.invalidDateRange"
                   :key="index"
                   :label="bar.label"
                   :viewWidth="viewWidth"
@@ -100,13 +100,27 @@
                   :translateX="bar.translateX" 
                   :translateY="bar.translateY"
                   :stepGesture="bar.stepGesture"
+                  :invalidDateRange="bar.invalidDateRange"
                   :dateTextFormat="bar.dateTextFormat"
                   :showDragBar="getShowBar(bar.translateY, selectionIndicatorTop)"
                   @gesturePress="(event, type) => shadowGesturePress(event, type, bar)" 
-                  @gesturePressup="(event, type) => shadowGesturePressup(event, type, bar)"
                   @gestureBarPress="(event) => shadowGestureBarPress(event, bar)" 
                   @gestureBarPressup="(event) => shadowGestureBarPressup(event, bar)"
                 ></task-bar>
+              </template>
+              <template v-for="(bar, key) in barList.filter(item => item.invalidDateRange)">
+                <invalid-task-bar 
+                  :key="barList.length + key"
+                  :translateX="translateX"
+                  :top="bar.translateY"
+                  :left="bar.translateX"
+                  :startXRectBar="bar.startXRectBar"
+                  :dateTextFormat="bar.dateTextFormat"
+                  :setShadowShow="bar.setShadowShow"
+                  :setInvalidTaskBar="(left, width) => bar.setInvalidTaskBar(bar, left, width)"
+                  @gesturePress="(event, type) => shadowGesturePress(event, type, bar)" 
+                >
+                </invalid-task-bar>
               </template>
             </div>
           </div>
@@ -144,6 +158,7 @@ import weekday from 'dayjs/plugin/weekday';
 
 // import weekday from 'dayjs/plugin/weekday';
 import TaskBar from './task-bar';
+import invalidTaskBar from './invalid-task-bar';
 import TaskBarThumb from './task-bar-thumb';
 import TimeIndicator from './time-indicator.vue';
 import TimeAxisScaleSelect from './time-axis-scale-select.vue';
@@ -203,6 +218,12 @@ const dataList = [
   },
   {
     executor: null,
+    content: '甘特图实现2',
+    startDate: null,
+    endDate: null, 
+  },
+  {
+    executor: null,
     content: '阅读喜欢的书📚',
     startDate: '2020-08-18',
     endDate: '2020-08-19', 
@@ -226,8 +247,6 @@ const dataList = [
     endDate: '2020-09-06', 
   },
 ];
-
-// console.log(dataList);
 
 const startDate = '2020-07-01';
 
@@ -271,6 +290,7 @@ export default {
   name: "tsGantt",
   components: {
     TaskBar,
+    invalidTaskBar,
     TimeIndicator,
     TaskBarThumb,
     TimeAxisScaleSelect
@@ -294,11 +314,11 @@ export default {
       // 拖拽阴影相关参数
       gestureKeyPress: false,
       shadowGestSide: 'right',
-      shadowGestBarLeft: 554810,
+      shadowGestBarLeft: 0,
       shadowGestBarRight: 0,
       showDragToolShadow: false,
-      dragToolShadowX: 554810,
-      dragToolShadowW: 128,
+      dragToolShadowX: 0,
+      dragToolShadowW: 0,
       isShadowGesturePress: false,
 
       guestureGrantBodyMove: false,
@@ -315,6 +335,12 @@ export default {
       type: Number,
       default: 418,
     },
+    dataList: {
+      type: Array,
+      default() {
+        return dataList;
+      }
+    }
   },
   computed: {
     svgViewH() {
@@ -369,14 +395,90 @@ export default {
         return dayjs(startX * pxUnitAmp).format('YYYY-MM-DD');
       }
 
-      return dataList.map((item, index) => {
-        let startAmp = dayjs(item.startDate).valueOf();
-        let endAmp = dayjs(item.endDate).valueOf();
+      // 获取鼠标位置所在bar大小及位置
+      const startXRectBar = (startX) => {
+        let date = dayjs(startX * pxUnitAmp);
+        const dayRect = () => {
+          const stAmp = date.startOf('day');
+          const endAmp = date.endOf('day');
+          const left = stAmp / pxUnitAmp;
+          const width = (endAmp - stAmp) / pxUnitAmp; 
+          
+          return {
+            left, 
+            width,
+          }
+        }
+        const weekRect = () => {
+          // week 注意周日为每周第一天 ????????
+          if (date.$W === 0) {
+            date = date.add(-1, 'week');
+          }
+
+          const left = date.weekday(1).startOf('day').valueOf() / pxUnitAmp;
+          const width = (7 * 24 * 60 * 60 * 1000 - 1000) / pxUnitAmp; 
+
+          return {
+            left,
+            width,
+          }
+        }
+        const monthRect = () => {
+          const stAmp = date.startOf('month').valueOf();
+          const endAmp = date.endOf('month').valueOf();
+          const left = stAmp / pxUnitAmp;
+          const width = (endAmp - stAmp) / pxUnitAmp;
+
+          return {
+            left,
+            width
+          }
+        }
+
+        const map = {
+          day: dayRect,
+          week: weekRect, 
+          month: weekRect,
+          quarter: monthRect,
+          halfYear: monthRect
+        };
+
+        return map[this.viewTypeObj.key]()
+      };
+
+      // 设置阴影位置
+      const setShadowShow = (left, width, isShow) => {
+        this.showDragToolShadow = isShow;
+        this.shadowGestBarLeft = left;
+        this.shadowGestBarRight = left + width;
+        this.dragToolShadowX = left;
+        this.dragToolShadowW = width;
+      }
+      
+      // 设置任务
+      const setInvalidTaskBar = (barInfo, left, width) => {
+        barInfo.translateX = left;
+        barInfo.width = width;
+        barInfo.invalidDateRange = false;
+
+        this.showDragToolShadow = true;
+        this.shadowGestBarLeft = left + width;
+        this.shadowGestBarRight = 0; 
+
+        this.dragToolShadowX = left;
+        this.dragToolShadowW = width;
+
+        barInfo.stepGesture = 'moving';
+      }
+
+      return this.dataList.map((item, index) => {
+        let startAmp = dayjs(item.startDate || 0).valueOf();
+        let endAmp = dayjs(item.endDate || 0).valueOf();
 
         // 开始结束日期相同默认一天
         if (Math.abs(endAmp - startAmp) < minStamp) {
-          startAmp = dayjs(item.startDate).valueOf();
-          endAmp = dayjs(item.endDate).add(minStamp, 'millisecond').valueOf();
+          startAmp = dayjs(item.startDate || 0).valueOf();
+          endAmp = dayjs(item.endDate || 0).add(minStamp, 'millisecond').valueOf();
         }
 
         let width = (endAmp - startAmp ) / pxUnitAmp;
@@ -384,13 +486,18 @@ export default {
         let translateY = baseTop + index * topStep;
 
         return {
+          task: item,
           translateX,
           translateY,
           width,
           height,
           label: item.content,
           stepGesture: 'end', // start(开始）、moving(移动)、end(结束)
-          dateTextFormat,  //TODO 日期格式化函数 后期根据当前时间格式化为上周下周
+          invalidDateRange: !item.endDate || !item.startDate,  // 是否为有效时间区间
+          dateTextFormat,  //TODO 日期格式化函数 后期根据当前时间格式化为上周下周,
+          startXRectBar,   // 鼠标位置 获取创建bar位置及大小
+          setShadowShow,
+          setInvalidTaskBar,
         }
       })
     },
@@ -517,7 +624,6 @@ export default {
 
         // 每次step可能不一样， 动态计算 如：每月可能30或31天
         const step = getMoveStep(isLeft, isShrink, barInfo);
-        // console.log(step, '>>>>>>>>>>>>');
 
         if (isShrink) {
           moveShrinkStep(moveDis, step, pointerX);
@@ -1029,7 +1135,6 @@ export default {
     viewTypeObj() {
       this.translateX = dayjs(startDate).valueOf() / (this.viewTypeObj.value * 1000);
       this.barList = this.getBarList();
-      // console.log(this.getMajorList());
     }
   },
   created() {

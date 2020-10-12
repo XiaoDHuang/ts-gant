@@ -1,7 +1,8 @@
 <template>
   <div
     v-on:click.stop
-    class="task-bar__2VdE overdue__1gSA" 
+    class="task-bar__2VdE"
+    :class="invalidDateRange ? 'invalid-date-range__sobT': 'overdue__1gSA'"
     :style="`transform: translate(${translateX}px, ${translateY}px);`"
   >
     <div>
@@ -105,6 +106,10 @@ export default {
       type: Function,
       default: () => '',
     },
+    invalidDateRange: {
+      type: Boolean,
+      default: false,
+    },
     resizeHander: {
       type: Function,
       default: () => {},
@@ -137,11 +142,11 @@ export default {
       const rightHam = new Hammer(rightHander);
       // let baseX = 0;
       const press = (event, type) => {
-        this.$emit('gesturePress', event, type)
+        this.$emit('gesturePress', event, type);
       }
 
       const pressup = (event, type) => {
-        this.$emit('gesturePressup', event, type, );
+        this.$emit('gesturePressup', event, type);
       }
 
       leftHam.on('press', (event) => press(event, 'left'));

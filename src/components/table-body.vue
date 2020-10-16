@@ -1,8 +1,13 @@
 <template>
-  <div class="scrollable__3FQe" :style="`width: ${tableWidth}px; height: ${tableHeight}px;`">
+  <div 
+    class="scrollable__3FQe" 
+    :style="`width: ${tableWidth}px; height: ${tableHeight}px;`"
+  >
     <div 
       class="body__38O5 view-compact__1L78"
+      @mouseenter.prevent="onMouseEnter"
       @mousemove="event => $emit('mousemove', event)"
+      @mouseleave="onMouseLeave"
       style="width: 616px; height: 285px;"
     >
       <div class="row__29JV" style="top: 0px; height: 4px;">
@@ -24,7 +29,7 @@
           :key="index"
           data-row="robot-guide" 
           class="row__29JV" 
-          :class="{hovered: barInfo.getHovered(barInfo.translateY, selectionIndicatorTop)}"
+          :class="{hovered: barInfo.getHovered(barInfo.translateY, selectionIndicatorTop) && showSelectionIndicator}"
           :style="`top: ${barInfo.translateY - 10}px; height: ${rowHeight}px;`" 
         >
           <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 304px;">
@@ -101,6 +106,10 @@
 const indent = 38;
 export default {
   props: {
+    showSelectionIndicator: {
+      type: Boolean,
+      default: false,
+    },
     selectionIndicatorTop: {
       type: Number,
       default: 0,
@@ -138,6 +147,12 @@ export default {
     },
     rowTrigger(barInfo) {
       this.$emit('onRowOpen', barInfo.task, !barInfo._collapsed);
+    },
+    onMouseEnter(event) {
+      this.$emit('onMouseEnter', event);
+    },
+    onMouseLeave(event) {
+      this.$emit('onMouseLeave', event);
     }
   }
 }

@@ -53,10 +53,13 @@
             :style="`display: none; height: 28px; top: ${selectionIndicatorTop}px;`"
           ></div>
           <table-body
+            :showSelectionIndicator="showSelectionIndicator"
             :selectionIndicatorTop="selectionIndicatorTop"
             :table-width="tableWidth" 
             :dataList="barList" 
             :table-height="svgViewH" 
+            @onMouseEnter="onMouseEnter"
+            @onMouseLeave="showSelectionIndicator = false"
             @mousemove="deOnMouseMove"
             @onRowOpen="onRowOpen"
           ></table-body>
@@ -956,6 +959,9 @@ export default {
         let top = Math.floor((offsetY - 4) / rowH) * rowH + 4;
         this.showSelectionIndicator = true;
         this.selectionIndicatorTop = top;
+        if (Number.isNaN(top)) {
+          debugger;
+        }
       }
     },
 

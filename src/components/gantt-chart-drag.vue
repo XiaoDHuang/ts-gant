@@ -1,15 +1,26 @@
 <template>
-  <div class="gantt-app-view" :style="`width: ${viewWidth}px;height:${viewHeight}px;margin:auto;`">
+  <div class="gantt-app-view" :style="`width: ${width}px;height:${viewHeight}px;margin:auto;`">
+    <svg-symbol></svg-symbol>
     <div class="container__1PWP" style="box-sizing: content-box;">
       <div 
         ref="ganttBody" 
         id="gantt-body" 
         class="body__3LBc gantt__3Xim"
-        :width="viewWidth" 
+        :width="width" 
         :height="viewHeight">
         <div :class="{ scrolling__1B1k: guestureGrantBodyMove }" class="scroll-indicator__3aij" style="left: -8px; width: 8px;"></div>
         <header>
-          <div ref="timeAxisRender" @wheel.prevent="wheel" class="time-axis__3meF" style="left: 0px; width: 1332px;">
+          <table-header 
+            :collapsed="collapsed"
+            :width="tableWidth" 
+            @onAllRowOpen="onAllRowOpen"
+          ></table-header>
+          <div 
+            ref="timeAxisRender" 
+            @wheel.prevent="wheel" 
+            class="time-axis__3meF" 
+            :style="`left: ${tableWidth}px; width: ${viewWidth}px;`"
+          >
             <div  class="render-chunk__28qu" :style="`transform: translateX(-${translateX}px;`">
               <div 
                 v-for="(item, key) in getMajorList()" 
@@ -41,6 +52,14 @@
             v-show="showSelectionIndicator" 
             :style="`display: none; height: 28px; top: ${selectionIndicatorTop}px;`"
           ></div>
+          <table-body
+            :selectionIndicatorTop="selectionIndicatorTop"
+            :table-width="tableWidth" 
+            :dataList="barList" 
+            :table-height="svgViewH" 
+            @mousemove="deOnMouseMove"
+            @onRowOpen="onRowOpen"
+          ></table-body>
           <div
             ref="chartView"
             @wheel.prevent="wheel"
@@ -49,7 +68,7 @@
             @mousemove="deOnMouseMove"
             @mouseleave="showSelectionIndicator = false"
             class="chart__3nGi" 
-            :style="`left:0px;height:${svgViewH}px;width:${viewWidth}px;`"
+            :style="`left:${tableWidth}px;height:${svgViewH}px;width:${viewWidth}px;`"
           >
             <svg class="chart-svg-renderer__7ors"
               xmlns="http://www.w3.org/2000/svg" 
@@ -102,7 +121,7 @@
                   :stepGesture="bar.stepGesture"
                   :invalidDateRange="bar.invalidDateRange"
                   :dateTextFormat="bar.dateTextFormat"
-                  :showDragBar="getShowBar(bar.translateY, selectionIndicatorTop)"
+                  :showDragBar="bar.getHovered(bar.translateY, selectionIndicatorTop)"
                   @gesturePress="(event, type) => shadowGesturePress(event, type, bar)" 
                   @gestureBarPress="(event) => shadowGestureBarPress(event, bar)" 
                   @gestureBarPressup="(event) => shadowGestureBarPressup(event, bar)"
@@ -125,7 +144,7 @@
             </div>
           </div>
         </main>
-        
+        <divider-split @showTable="showTable" :left="tableWidth"></divider-split>
         <time-indicator
           :guestureGrantBodyMove="guestureGrantBodyMove"
           :viewTranslateX="translateX"
@@ -156,6 +175,7 @@ import advancedFormat from "dayjs/plugin/advancedFormat";
 import isLeapYear from "dayjs/plugin/isLeapYear";
 import weekday from 'dayjs/plugin/weekday';
 
+import { flattenDeep } from '../util/array';
 // import weekday from 'dayjs/plugin/weekday';
 import TaskBar from './task-bar';
 import invalidTaskBar from './invalid-task-bar';
@@ -164,6 +184,10 @@ import TimeIndicator from './time-indicator.vue';
 import TimeAxisScaleSelect from './time-axis-scale-select.vue';
 
 import Hammer from 'hammerjs';
+import TableHeader from './table-header';
+import TableBody from './table-body';
+import SvgSymbol from './svg-symbol';
+import DividerSplit from './divider-split';
 
 import '@/assets/css/icons.css';
 import '@/assets/css/cds.css';
@@ -208,43 +232,82 @@ const dataList = [
     executor: null,
     content: '绘制表盘设计逻辑',
     startDate: '2020-07-01 08:02:02',
-    endDate: '2020-07-02', 
+    endDate: '2020-07-02',
+    collapsed: false,
   },
   {
     executor: null,
     content: '甘特图实现',
     startDate: '2016-12-01',
     endDate: '2016-12-31', 
+    collapsed: false,
+    children: [
+      {
+        executor: null,
+        content: '绘制表盘设计逻辑',
+        startDate: '2020-07-01 08:02:02',
+        endDate: '2020-07-02',
+        collapsed: false,
+      },
+      {
+        executor: null,
+        content: '绘制表盘设计逻辑2',
+        startDate: '2020-07-01 08:02:02',
+        endDate: '2020-07-02',
+        collapsed: false,
+        children: [
+          {
+            executor: null,
+            content: '甘特图实现2',
+            startDate: null,
+            endDate: null, 
+            collapsed: false,
+          },
+          {
+            executor: null,
+            content: '阅读喜欢的书📚',
+            startDate: '2020-08-18',
+            endDate: '2020-08-19', 
+            collapsed: false,
+          },
+        ]
+      },
+    ],
   },
   {
     executor: null,
     content: '甘特图实现2',
     startDate: null,
     endDate: null, 
+    collapsed: false,
   },
   {
     executor: null,
     content: '阅读喜欢的书📚',
     startDate: '2020-08-18',
     endDate: '2020-08-19', 
+    collapsed: false,
   },
   {
     executor: null,
     content: '三体',
     startDate: '2020-08-20',
     endDate: '2020-08-25', 
+    collapsed: false,
   },
   {
     executor: null,
     content: '预订纪念日餐厅',
     startDate: '2020-07-01',
     endDate: '2020-09-06', 
+    collapsed: false,
   },
   {
     executor: null,
     content: '绘制表盘设计逻辑"',
     startDate: '2020-08-20',
     endDate: '2020-09-06', 
+    collapsed: false
   },
 ];
 
@@ -286,10 +349,48 @@ const locationModule = {
   }
 };
 
+/** 排版相关逻辑 */
+const layout = {
+  showTable() {
+    if (this.tableWidth > 0) {
+      this.tableWidth = 0;
+    } else {
+      this.tableWidth = 616;
+    }
+
+    this.viewWidth = this.gantW - this.tableWidth;
+  },
+}
+const taskEvent = {
+  onRowAdd() {},
+  onRowAddChild() {},
+  onColumnSort() {},
+  onTaskCreate() {},
+
+  onRowOpen(task, collapsed) {
+    task.collapsed = collapsed;
+    this.barList = this.getBarList();
+  },
+  onAllRowOpen() {
+    this.collapsed = !this.collapsed;
+    this.barList.forEach((item) => {
+      item.task.collapsed = this.collapsed;
+    });
+
+    this.barList = this.getBarList();
+    this.$forceUpdate();
+  },
+  onColumnToggle() {}
+}
+
 export default {
   name: "tsGantt",
   components: {
+    SvgSymbol,
+    DividerSplit,
     TaskBar,
+    TableHeader,
+    TableBody,
     invalidTaskBar,
     TimeIndicator,
     TaskBarThumb,
@@ -298,10 +399,16 @@ export default {
   data() {
     const viewTypeObj = viewTypeList[0];
     const translateX = dayjs(startDate).valueOf() / (viewTypeObj.value * 1000);
+    const gantW = this.width; 
+    const viewWidth = 704;
+    const tableWidth = 616;
+    const collapsed = this.dataList.every(bar => bar.collapsed);
 
     return {
-      viewWidth: this.width,
+      gantW,
+      viewWidth,
       viewHeight: this.height,
+      tableWidth,
       viewTypeList, 
       cellUnit: 30,
       wheelDis: 0,
@@ -324,12 +431,13 @@ export default {
       guestureGrantBodyMove: false,
       // 数据部分
       barList: [],
+      collapsed,
     };
   },
   props: {
     width: {
       type: Number,
-      default: 1332
+      default: 1320
     },
     height: {
       type: Number,
@@ -373,15 +481,7 @@ export default {
         this.showSelectionBar(event);
       }
     },
-    /**
-     * 根据选中行高度 显示对应条状工具条
-     */
-    getShowBar(top, selectionIndicatorTop) {
-      let baseTop = top - (top % rowHeight);
-      let isShow = (selectionIndicatorTop >= baseTop && selectionIndicatorTop <= baseTop + rowHeight);
-
-      return isShow;
-    },
+    
    
     getBarList() {
       const pxUnitAmp = this.pxUnitAmp;
@@ -470,8 +570,23 @@ export default {
 
         barInfo.stepGesture = 'moving';
       }
+      /**
+       * 根据选中行高度 显示对应条状工具条
+       */
+      const getHovered = (top, selectionIndicatorTop) => {
+        let baseTop = top - (top % rowHeight);
+        let isShow = (selectionIndicatorTop >= baseTop && selectionIndicatorTop <= baseTop + rowHeight);
 
-      return this.dataList.map((item, index) => {
+        return isShow;
+      }
+
+      const getDataList = () => {
+        return flattenDeep(this.dataList) 
+      };
+
+      const dataList = getDataList();
+
+      return dataList.map((item, index) => {
         let startAmp = dayjs(item.startDate || 0).valueOf();
         let endAmp = dayjs(item.endDate || 0).valueOf();
 
@@ -498,6 +613,10 @@ export default {
           startXRectBar,   // 鼠标位置 获取创建bar位置及大小
           setShadowShow,
           setInvalidTaskBar,
+          getHovered,
+          _collapsed: item.collapsed,
+          _depth: item._depth,
+          _childrenCount: !item.children ? 0 : item.children.length,
         }
       })
     },
@@ -1103,7 +1222,8 @@ export default {
       return list;
     },
     ...locationModule,
-
+    ...layout,
+    ...taskEvent,
     initGrantBodyGesture() {
       const ganttBody = this.$refs.ganttBody;
       const gantBodyH = new Hammer(ganttBody);
@@ -1141,7 +1261,6 @@ export default {
     this.deOnMouseMove = debounce(this.onMouseMove, 5)
   },
   mounted() {
-    console.log(this);
     this.barList = this.getBarList();
 
     this.initGrantBodyGesture();

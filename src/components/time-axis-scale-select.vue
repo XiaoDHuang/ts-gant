@@ -7,7 +7,7 @@
     <div class="shadow__3n0C" :class="{scrolling__2c3k: guestureGrantBodyMove}"></div>
     <div v-if="!isHide" class="next-overlay-wrapper opened">
       <div class="next-loading next-loading-inline next-overlay-inner next-select-loading next-select-single-menu"
-        aria-hidden="false" :style="`position: absolute; left: ${left}px; top: ${top}px;`">
+        aria-hidden="false" :style="`position: absolute; right: 15px; top: ${top}px;`">
         <div class="next-loading-wrap">
           <ul role="listbox" class="next-menu next-ver next-select-menu" aria-multiselectable="false">
             <li 

@@ -2,7 +2,7 @@
   <div class="scrollable__3FQe" :style="`width: ${width}px; height: 56px;`">
     <div class="head__NLQw" :style="`width: ${width}px; height: 56px;`">
       <div class="row__29JV" style="height: 56px;">
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 304px;">
+        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[0].width}px;`">
           <div class="config__3_dc">
             <div class="head-row-index__24Rh">
               <i class="next-icon next-icon-gear next-medium">
@@ -27,19 +27,30 @@
            </div>
           <div class="handle__cGEN right" data-role="handle"></div>
         </div>
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 115px;">
-          <div class="head-cell__cL1U"><span class="ellipsis__315v sortable___z3_">执行者</span></div>
+        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[1].width}px;`">
+          <div class="head-cell__cL1U">
+            <span class="ellipsis__315v sortable___z3_">执行者</span>
+          </div>
           <div class="handle__cGEN right" data-role="handle"></div>
         </div>
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 127px;">
-          <div class="head-cell__cL1U"><span class="ellipsis__315v sortable___z3_">截止时间<i
-                class="next-icon next-icon-triangle-up-s next-medium"><svg viewBox="0 0 1024 1024">
+        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[2].width}px;`">
+          <div class="head-cell__cL1U">
+            <span class="ellipsis__315v sortable___z3_">
+              截止时间
+              <i
+                class="next-icon next-icon-triangle-up-s next-medium">
+                <svg viewBox="0 0 1024 1024">
                   <use xlink:href="#at-triangle-up-s"></use>
-                </svg></i></span></div>
+                </svg>
+              </i>
+            </span>
+          </div>
           <div class="handle__cGEN right" data-role="handle"></div>
         </div>
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 70px;">
-          <div class="head-cell__cL1U"><span class="ellipsis__315v">前置依赖</span></div>
+        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[3].width}px;`">
+          <div class="head-cell__cL1U">
+            <span class="ellipsis__315v">前置依赖</span>
+          </div>
           <div class="handle__cGEN right" data-role="handle"></div>
         </div>
       </div>
@@ -60,6 +71,10 @@
       height: {
         type: Number,
         default: 56,
+      },
+      columns: {
+        type: Array,
+        default: () => [] 
       }
     },
     methods: {

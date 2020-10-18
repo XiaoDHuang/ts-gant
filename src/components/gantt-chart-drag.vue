@@ -1,18 +1,19 @@
 <template>
-  <div class="gantt-app-view" :style="`width: ${width}px;height:${viewHeight}px;margin:auto;`">
+  <div class="gantt-app-view" ref="gantAppView">
     <svg-symbol></svg-symbol>
     <div class="container__1PWP" style="box-sizing: content-box;">
       <div 
         ref="ganttBody" 
         id="gantt-body" 
         class="body__3LBc gantt__3Xim"
-        :width="width" 
+        :width="gantW" 
         :height="viewHeight">
         <div :class="{ scrolling__1B1k: guestureGrantBodyMove }" class="scroll-indicator__3aij" style="left: -8px; width: 8px;"></div>
         <header>
           <table-header 
             :collapsed="collapsed"
-            :width="tableWidth" 
+            :width="tableWidth"
+            :columns="columns"
             @onAllRowOpen="onAllRowOpen"
           ></table-header>
           <div 
@@ -57,7 +58,8 @@
             :selectionIndicatorTop="selectionIndicatorTop"
             :table-width="tableWidth" 
             :dataList="barList" 
-            :table-height="svgViewH" 
+            :table-height="svgViewH"
+            :columns="columns"
             @onMouseEnter="onMouseEnter"
             @onMouseLeave="showSelectionIndicator = false"
             @mousemove="deOnMouseMove"
@@ -179,6 +181,7 @@ import isLeapYear from "dayjs/plugin/isLeapYear";
 import weekday from 'dayjs/plugin/weekday';
 
 import { flattenDeep } from '../util/array';
+import { addResizeListener } from '../util/resize-event';
 // import weekday from 'dayjs/plugin/weekday';
 import TaskBar from './task-bar';
 import invalidTaskBar from './invalid-task-bar';
@@ -203,6 +206,7 @@ dayjs.extend(quarterOfYear);
 dayjs.extend(advancedFormat);
 dayjs.extend(isBetween);
 dayjs.extend(isLeapYear);
+
 
 window.dayjs = dayjs;
 // console.log(TimeIndicator, '>>>>>>>');
@@ -230,6 +234,51 @@ const rowHeight = 28;
 //   { translateY: 98, translateX: 554810, width: 120, label: '三体'},
 // ];
 
+const columns = [
+  {
+    width: 214,
+    minWidth: 210,
+    payload: {
+      name: "content",
+    },
+    visible: true,
+    keepVisible: true,
+    sortable: true,
+  },
+  {
+    width: 100,
+    minWidth: 52,
+    payload: {
+      name: "executor",
+    },
+    visible: true,
+    keepVisible: false,
+    sortable: true,
+  },
+  {
+    width: 120,
+    minWidth: 70,
+    payload: {
+      name: "dueDate",
+      key: "end",
+    },
+    visible: true,
+    keepVisible: false,
+    sortable: true,
+  },
+  {
+    width: 100,
+    minWidth: 70,
+    payload: {
+      name: "leadDependency",
+      key: "fs",
+    },
+    visible: true,
+    keepVisible: false,
+    sortable: false,
+  },
+];
+ 
 const dataList = [
   {
     executor: null,
@@ -345,6 +394,11 @@ const viewTypeList = [
   }
 ];
 
+const minViewRate = .38;
+
+const minWidth = 500;
+const minViewWidth = 200;
+
 /** 时间定位相关逻辑 */
 const locationModule = {
   locaTimeTranslate(translateX) {
@@ -354,15 +408,43 @@ const locationModule = {
 
 /** 排版相关逻辑 */
 const layout = {
-  showTable() {
-    if (this.tableWidth > 0) {
-      this.tableWidth = 0;
-    } else {
-      this.tableWidth = 616;
-    }
+  methods: {
+    showTable() {
+      if (this.tableWidth > 0) {
+        this.tableWidth = 0;
+      } else {
+        this.tableWidth = this.columns.reduce((width, item) => width+ item.width, 0);
+      }
 
-    this.viewWidth = this.gantW - this.tableWidth;
+      this.viewWidth = this.gantW - this.tableWidth;
+    },
   },
+  mounted() {
+    addResizeListener(this.$refs.gantAppView, () => {
+      const width = this.$refs.gantAppView.clientWidth;
+      const height = this.$refs.gantAppView.clientHeight;
+
+      this.gantW = width;
+      this.viewHeight = height;
+
+      
+      this.tableWidth = this.columns.reduce((width, item) => width+ item.width, 0);
+      this.viewWidth = this.gantW - this.tableWidth;
+      // 表盘宽度不能小于总宽度38%
+      if (this.viewWidth < minViewRate * width) {
+        this.viewWidth = minViewRate * width;
+        this.tableWidth = this.gantW - this.viewWidth;
+      }
+
+      // 表盘宽度不能小于 200
+      if (this.viewWidth < 200) {
+        this.viewWidth = 200;
+        this.tableWidth = this.gantW - this.viewWidth;
+      }
+
+      // console.log(width, height, '>>>>>>>>>>>>>>>>>');
+    })
+  } 
 }
 const taskEvent = {
   onRowAdd() {},
@@ -388,6 +470,7 @@ const taskEvent = {
 
 export default {
   name: "tsGantt",
+  mixins: [ layout ],
   components: {
     SvgSymbol,
     DividerSplit,
@@ -398,6 +481,26 @@ export default {
     TimeIndicator,
     TaskBarThumb,
     TimeAxisScaleSelect
+  },
+  props: {
+    width: {
+      type: Number,
+      default: 1320
+    },
+    height: {
+      type: Number,
+      default: 418,
+    },
+    dataList: {
+      type: Array,
+      default() {
+        return dataList;
+      }
+    },
+    columns: {
+      type: Array,
+      default: () => columns
+    },
   },
   data() {
     const viewTypeObj = viewTypeList[0];
@@ -436,22 +539,6 @@ export default {
       barList: [],
       collapsed,
     };
-  },
-  props: {
-    width: {
-      type: Number,
-      default: 1320
-    },
-    height: {
-      type: Number,
-      default: 418,
-    },
-    dataList: {
-      type: Array,
-      default() {
-        return dataList;
-      }
-    }
   },
   computed: {
     svgViewH() {
@@ -496,6 +583,10 @@ export default {
       // TODO 后期需优化 增加上周下周等内容
       const dateTextFormat = (startX) => {
         return dayjs(startX * pxUnitAmp).format('YYYY-MM-DD');
+      }
+      const _dateFormat = (date) => {
+        if (!date) return '待设置';
+        return dayjs(date).format('YYYY年MM月DD日')
       }
 
       // 获取鼠标位置所在bar大小及位置
@@ -620,6 +711,7 @@ export default {
           _collapsed: item.collapsed,
           _depth: item._depth,
           _childrenCount: !item.children ? 0 : item.children.length,
+          _dateFormat,
         }
       })
     },
@@ -1228,7 +1320,6 @@ export default {
       return list;
     },
     ...locationModule,
-    ...layout,
     ...taskEvent,
     initGrantBodyGesture() {
       const ganttBody = this.$refs.ganttBody;

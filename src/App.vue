@@ -1,13 +1,11 @@
 <template>
-  <div>
+  <div style="width:100%;height:100vh;display:flex;flex-flow:column;overflow:hidden;">
     <tsGantt></tsGantt>
   </div>
 </template>
 
 <script>
-// import wlGantt from "./components/gantt.vue";
-import tsGantt from "@/components";
-
+import TsGantt from "@/components";
 export default {
   name: "app",
   data() {
@@ -156,7 +154,7 @@ export default {
     }
   },
   components: {
-    tsGantt
+    TsGantt,
   }
 };
 </script>

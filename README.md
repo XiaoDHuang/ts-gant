@@ -1,4 +1,4 @@
-# wl-gantt
+# ts-gantt
 
 # 简介
   甘特图（Gantt chart）又称为横道图、条状图(Bar chart)、生产计划进度图。其通过条状图来显示项目，进度，和其他时间相关的系统进展的内在关系随着时间进展的情况。以提出者亨利·劳伦斯·甘特（Henry Laurence Gantt）先生的名字命名。  
@@ -19,7 +19,7 @@
 
 ### [在线演示](http://wlui.com.cn/ui/gantt) - [GitHub](https://github.com/hql7)
 
-### wl-gantt 与市面应用较广的大佬型插件对比
+### ts-gantt 与市面应用较广的大佬型插件对比
 
 > wl-gantt 外观简洁清爽，非常简单易用，高度可配置
   ![wl-gantt](http://wlsy.oss-cn-hangzhou.aliyuncs.com/wl-gantt.png)
@@ -40,10 +40,6 @@
   ![bryntum](http://wlsy.oss-cn-hangzhou.aliyuncs.com/bryntum.png)
 
 ### 更新说明
-  > 2020-04-03 懒加载
-  > 2020-02-20 更新gantt，详见版本说明1.0.1
-  > 2019-12-14 更新gantt，增加内置前置任务列，支持多选前置和单选前置，并自动校验源数据前置任务合法性。
-  > 2019-12-3 更新gantt。1表格支持[el-table](https://element.eleme.cn/#/zh-CN/component/table)大部分`Attributes`和`Events`,详细列表见下方；2名称列增加`nameFormatter`格式化内容函数支持；3日期列改为点击显示编辑输入框的形式。  
   > 2019-12-2 更新gantt.1日期支持` yearAndMonth、monthAndDay、yearAndWeek`类型，详见`版本记录1`；2修复部分时间更改情况不回调的问题。
 
 

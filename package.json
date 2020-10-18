@@ -23,6 +23,7 @@
     "element-ui": "^2.13.2",
     "hammerjs": "^2.0.8",
     "lodash": "^4.17.20",
+    "resize-observer-polyfill": "^1.5.1",
     "uuid": "^3.3.3",
     "vue": "^2.6.10",
     "vue-virtual-scroller": "^1.0.0-rc.2"

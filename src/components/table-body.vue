@@ -11,16 +11,11 @@
       style="width: 616px; height: 285px;"
     >
       <div class="row__29JV" style="top: 0px; height: 4px;">
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 304px;">
-          <div class="handle__cGEN right" data-role="handle"></div>
-        </div>
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 115px;">
-          <div class="handle__cGEN right" data-role="handle"></div>
-        </div>
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 127px;">
-          <div class="handle__cGEN right" data-role="handle"></div>
-        </div>
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 70px;">
+        <div 
+          v-for="(item, key) in columns" 
+          :key="key" 
+          class="cell__3xqP resize-default__2DLj resizable__3OIa" 
+          :style="`width: ${item.width}px;`">
           <div class="handle__cGEN right" data-role="handle"></div>
         </div>
       </div>
@@ -32,7 +27,7 @@
           :class="{hovered: barInfo.getHovered(barInfo.translateY, selectionIndicatorTop) && showSelectionIndicator}"
           :style="`top: ${barInfo.translateY - 10}px; height: ${rowHeight}px;`" 
         >
-          <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 304px;">
+          <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[0].width}px;`">
             <div class="row-before__3blm" style="padding-left: 56px;">
               <div class="row-index__3xNX" title="1" style="width: 24px;">{{index + 1}}</div>
               <div class="row-indentation__2dHs" :style="`background-size: ${indent}px; width: ${getIndent(barInfo._depth)}px;`"></div>
@@ -63,7 +58,7 @@
             </div>
             <div class="handle__cGEN right" data-role="handle"></div>
           </div>
-          <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 115px;">
+          <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[1].width}px;`">
             <div class="body-cell__OUd5 executor__1eK3 hasPermission empty"><span data-role="avatar"
                 class="avatar__1gRA avatar-xsmall__pF8f avatar-circle__3q2Y gantt-app-outline-executor-avatar"
                 shape="circle"
@@ -71,13 +66,13 @@
                 class="text">待认领</span></div>
             <div class="handle__cGEN right" data-role="handle"></div>
           </div>
-          <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 127px;">
+          <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[2].width}px;`">
             <div class="body-cell__OUd5 date__hqPF hasPermission">
-              <span class="text">2005年9月27日</span>
+              <span class="text">{{barInfo._dateFormat(barInfo.task.endDate)}}</span>
             </div>
             <div class="handle__cGEN right" data-role="handle"></div>
           </div>
-          <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 70px;">
+          <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[3].width}px;`">
             <div class="body-cell__OUd5 lead-dependency__3cgD empty__28lE">
               <span class="text__3Q8b">待填写</span>
             </div>
@@ -129,6 +124,10 @@ export default {
     dataList: {
       type: Array,
       default: () => [] 
+    },
+    columns: {
+      type: Array,
+      default: () => [] 
     }
   },
   data() {
@@ -153,7 +152,7 @@ export default {
     },
     onMouseLeave(event) {
       this.$emit('onMouseLeave', event);
-    }
+    },
   }
 }
 </script>

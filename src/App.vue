@@ -114,29 +114,6 @@ export default {
     // 添加任务
     taskAdd(item) {
       console.log("添加任务：", item);
-      // 非懒加载方式直接设置子数据
-      /* this.$set(
-        item,
-        "children",
-        item.children.concat([
-          {
-            pid: item.id,
-            id: "###",
-            name: "一轮新月",
-            startDate: "2019-10-11",
-            endDate: "2019-10-19"
-          }
-        ])
-      ); */
-      this.$refs["wl-gantt-demo"].loadTreeAdd(item.id, [
-        {
-          pid: item.id,
-          id: "###",
-          name: "一轮新月",
-          startDate: "2019-10-11",
-          endDate: "2019-10-19"
-        }
-      ]);
     },
     // 懒加载
     lazyLoad(tree, treeNode, resolve) {

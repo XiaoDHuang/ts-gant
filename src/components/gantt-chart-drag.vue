@@ -8,15 +8,18 @@
         class="body__3LBc gantt__3Xim"
         :width="gantW" 
         :height="viewHeight">
-        <div :class="{ scrolling__1B1k: guestureGrantBodyMove }" class="scroll-indicator__3aij" style="left: -8px; width: 8px;"></div>
+        <div 
+          :class="{ scrolling__1B1k: guestureGrantBodyMove }" 
+          class="scroll-indicator__3aij" style="left: -8px; width: 8px;">
+        </div>
         <header>
           <table-header
             ref="tableHeader"
             :collapsed="collapsed"
             :width="tableWidth"
             :columns="columns"
+            :layGesture="layGesture"
             @onAllRowOpen="onAllRowOpen"
-            @handleMouseOver="layHandleMouseOver"
           ></table-header>
           <div 
             ref="timeAxisRender" 
@@ -62,11 +65,11 @@
             :dataList="barList" 
             :table-height="svgViewH"
             :columns="columns"
+            :layGesture="layGesture"
             @onMouseEnter="onMouseEnter"
             @onMouseLeave="showSelectionIndicator = false"
             @mousemove="deOnMouseMove"
             @onRowOpen="onRowOpen"
-            @handleMouseOver="layHandleMouseOver"
           ></table-body>
           <div
             ref="chartView"
@@ -417,6 +420,7 @@ const layout = {
   data() {
     return {
       layIsHandleOver: false,
+      layGesture: () => {}
     }
   },
   watch: {
@@ -430,6 +434,22 @@ const layout = {
     }
   },
   methods: {
+    layUpdate() {
+      this.tableWidth = this.columns.reduce((width, item) => width+ item.width, 0);
+      this.viewWidth = this.gantW - this.tableWidth;
+
+      // 表盘宽度不能小于总宽度38%
+      if (this.viewWidth < minViewRate * this.gantW) {
+        this.viewWidth = minViewRate * this.gantW;
+        this.tableWidth = this.gantW - this.viewWidth;
+      }
+
+      // 表盘宽度不能小于 200
+      if (this.viewWidth < 200) {
+        this.viewWidth = 200;
+        this.tableWidth = this.gantW - this.viewWidth;
+      }
+    },
     showTable() {
       if (this.tableWidth > 0) {
         this.tableWidth = 0;
@@ -439,13 +459,9 @@ const layout = {
 
       this.viewWidth = this.gantW - this.tableWidth;
     },
-    layHandleMouseOver(column, isOver) {
-      column._isHandleOver = isOver;
-      this.$refs.tableHeader.$forceUpdate();
-    }
+    
   },
   mounted() {
-
     addResizeListener(this.$refs.gantAppView, () => {
       const width = this.$refs.gantAppView.clientWidth;
       const height = this.$refs.gantAppView.clientHeight;
@@ -467,9 +483,94 @@ const layout = {
         this.viewWidth = 200;
         this.tableWidth = this.gantW - this.viewWidth;
       }
+    });
+    const layGesture = () => {
+      const gantBody = this.$refs.ganttBody;
+      const gantBodyH = new Hammer(gantBody);
 
-      // console.log(width, height, '>>>>>>>>>>>>>>>>>');
-    })
+      let column = null;
+      let startWidth = 0;
+      let isPress = false;
+
+      // 更新操作
+      const update  = (event) => {
+        if (!column) return;
+
+        let width = startWidth + event.deltaX;
+        if (width < column.minWidth) {
+          width = column.minWidth;
+        }
+        
+        column.width = width;
+        this.layUpdate();
+      }
+      
+      // 手指按下
+      const mouseOver = (item) => {
+        column = item;
+        column._isHandleOver = true;
+      }
+
+      // 手指抬起
+      const mouseLeave = (column) => {
+        if (isPress) return; 
+        column._isHandleOver = false;
+        column = null;
+      }
+
+      // 开始滑动
+      const mouseDown = () => {
+        isPress = true;
+      }
+
+      // 手指移动结束
+      const panStart = (event) => {
+        if (!column) return;
+
+        isPress = true;
+        column._isHandleOver = true;
+        startWidth = column.width;
+        update(event);
+      }
+      // 手指移动
+      const panMove = (event) => {
+        if (!column) return;
+        if (!isPress) return;
+
+        aTick(() => {
+          update(event);
+        });
+      }
+
+      const panEnd = (event) => {
+        if (!column) return;
+
+        update(event);
+        isPress = false;
+        column._isHandleOver = false;
+        column = null;
+      }
+
+      const map = {
+        mouseOver,
+        mouseLeave,
+        mouseDown,
+        panStart,
+        panMove,
+        panEnd
+      }
+      
+      gantBodyH.on('panstart', panStart);
+      gantBodyH.on('panmove', panMove);
+      gantBodyH.on('panend', panEnd);
+
+      // 函数闭包
+      return (type, param) => {
+        map[type](param);
+      }
+    };
+
+    this.layGesture = layGesture();
   } 
 }
 const taskEvent = {
@@ -1077,9 +1178,6 @@ export default {
         let top = Math.floor((offsetY - 4) / rowH) * rowH + 4;
         this.showSelectionIndicator = true;
         this.selectionIndicatorTop = top;
-        if (Number.isNaN(top)) {
-          debugger;
-        }
       }
     },
 
@@ -1348,12 +1446,16 @@ export default {
     ...locationModule,
     ...taskEvent,
     initGrantBodyGesture() {
-      const ganttBody = this.$refs.ganttBody;
-      const gantBodyH = new Hammer(ganttBody);
+      const timeAxisRender = this.$refs.timeAxisRender;
+      const chartView = this.$refs.chartView;
+
+      const timeAxisRenderH = new Hammer(timeAxisRender);
+      const chartViewH = new Hammer(chartView);
       let translateX = this.translateX;
 
       const panStart = () => {
         if (this.gestureKeyPress) return;
+
         this.guestureGrantBodyMove = true;
         translateX = this.translateX;
       }
@@ -1369,9 +1471,12 @@ export default {
         this.translateX = translateX - event.deltaX;
       }
 
-      gantBodyH.on('panstart', panStart);
-      gantBodyH.on('panmove', panMove);
-      gantBodyH.on('panend', panEnd);
+      timeAxisRenderH.on('panstart', panStart);
+      timeAxisRenderH.on('panmove', panMove);
+      timeAxisRenderH.on('panend', panEnd);
+      chartViewH.on('panstart', panStart);
+      chartViewH.on('panmove', panMove);
+      chartViewH.on('panend', panEnd);
     },
   },
   watch: {

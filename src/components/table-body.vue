@@ -156,6 +156,10 @@ export default {
     columns: {
       type: Array,
       default: () => [] 
+    },
+    layGesture: {
+      type: Function,
+      default: () => () => {}
     }
   },
   data() {
@@ -182,8 +186,12 @@ export default {
       this.$emit('onMouseLeave', event);
     },
     handleMouseOver(column, isOver) {
-      this.$emit('handleMouseOver', column, isOver);
-    },
+        const type = isOver ? 'mouseOver' : 'mouseLeave';
+        this.layGesture(type, column)
+      },
+    dispatchGesture(type, event) {
+      this.layGesture(type, event);
+    }
   }
 }
 </script>

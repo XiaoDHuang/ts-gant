@@ -1,5 +1,9 @@
 <template>
-  <div class="scrollable__3FQe" :style="`width: ${width}px; height: 56px;`">
+  <div 
+    class="scrollable__3FQe"
+    @mousedown="(event) => dispatchGesture('mouseDown', event)"
+    :style="`width: ${width}px; height: 56px;`"
+  >
     <div class="head__NLQw" :style="`width: ${width}px; height: 56px;`">
       <div class="row__29JV" style="height: 56px;">
         <div 
@@ -114,6 +118,10 @@
       isHandleOver: {
         type: Boolean,
         default: false,
+      },
+      layGesture: {
+        type: Function,
+        default: () => () => {}
       }
     },
     data() {
@@ -124,8 +132,15 @@
         this.$emit('onAllRowOpen');
       },
       handleMouseOver(column, isOver) {
-        this.$emit('handleMouseOver', column, isOver);
+        const type = isOver ? 'mouseOver' : 'mouseLeave';
+        this.layGesture(type, column)
       },
+      dispatchGesture(type, event) {
+        this.layGesture(type, event);
+      }
+    },
+    mounted() {
+      this._gesture = this.layGesture();
     }
   }
 </script>

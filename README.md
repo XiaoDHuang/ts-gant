@@ -10,13 +10,8 @@
 
  ts-gant 是仿照Teambition甘特功能 用Vue实现一些基本功能，仅供学习和业务开发时参考。
 
-### [在线演示](http://wlui.com.cn/ui/gantt) - [GitHub](https://github.com/hql7)
+### 市面应用较广的大佬型插件
 
-### ts-gantt 与市面应用较广的大佬型插件对比
-
-> wl-gantt 外观简洁清爽，非常简单易用，高度可配置
-  ![wl-gantt](http://wlsy.oss-cn-hangzhou.aliyuncs.com/wl-gantt.png)
-  
 > jquery Gantt 笨重、老旧、较丑但文档还算清晰
   ![jquery Gantt](http://wlsy.oss-cn-hangzhou.aliyuncs.com/jq-gantt.png)
 

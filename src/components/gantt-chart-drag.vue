@@ -515,6 +515,7 @@ const layout = {
       // 手指抬起
       const mouseLeave = (column) => {
         if (isPress) return; 
+
         column._isHandleOver = false;
         column = null;
       }
@@ -527,8 +528,8 @@ const layout = {
       // 手指移动结束
       const panStart = (event) => {
         if (!column) return;
+        if (!isPress) return;
 
-        isPress = true;
         column._isHandleOver = true;
         startWidth = column.width;
         update(event);
@@ -545,6 +546,7 @@ const layout = {
 
       const panEnd = (event) => {
         if (!column) return;
+        if (!isPress) return;
 
         update(event);
         isPress = false;

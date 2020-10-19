@@ -1,7 +1,6 @@
 <template>
   <div 
     class="scrollable__3FQe"
-    @mousedown="(event) => dispatchGesture('mouseDown', event)"
     :style="`width: ${width}px; height: 56px;`"
   >
     <div class="head__NLQw" :style="`width: ${width}px; height: 56px;`">
@@ -36,6 +35,7 @@
           <div 
             class="handle__cGEN right" 
             data-role="handle"
+            @mousedown="(event) => dispatchGesture('mouseDown', event)"
             @mouseover="handleMouseOver(columns[0], true)" 
             @mouseout="handleMouseOver(columns[0], false)"  
           ></div>
@@ -50,6 +50,7 @@
           <div 
             class="handle__cGEN right" 
             data-role="handle"
+            @mousedown="(event) => dispatchGesture('mouseDown', event)"
             @mouseover="handleMouseOver(columns[1], true)" 
             @mouseout="handleMouseOver(columns[1], false)"  
           ></div>
@@ -73,6 +74,7 @@
           <div 
             class="handle__cGEN right" 
             data-role="handle"
+            @mousedown="(event) => dispatchGesture('mouseDown', event)"
             @mouseover="handleMouseOver(columns[2], true)" 
             @mouseout="handleMouseOver(columns[2], false)"  
           ></div>
@@ -88,6 +90,7 @@
           <div 
             class="handle__cGEN right"
             data-role="handle"
+            @mousedown="(event) => dispatchGesture('mouseDown', event)"
             @mouseover="handleMouseOver(columns[3], true)" 
             @mouseout="handleMouseOver(columns[3], false)"  
           ></div>

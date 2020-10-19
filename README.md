@@ -1,4 +1,6 @@
 # ts-gantt
+![avatar](./public/demo.png)
+(Vue仿Teambition甘特图)
 
 # 简介
   甘特图（Gantt chart）又称为横道图、条状图(Bar chart)、生产计划进度图。其通过条状图来显示项目，进度，和其他时间相关的系统进展的内在关系随着时间进展的情况。以提出者亨利·劳伦斯·甘特（Henry Laurence Gantt）先生的名字命名。  

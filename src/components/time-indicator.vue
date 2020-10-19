@@ -20,6 +20,10 @@ export default {
       type: Number,
       default: 554780
     },
+    tableWidth: {
+      type: Number,
+      default: 0,
+    },
     viewWidth: {
       type: Number,
       default: 1322
@@ -45,7 +49,7 @@ export default {
       return type;
     },
     left() {
-      return this.type=== 'left' ? '0px' : 'unset'
+      return this.type=== 'left' ? `${this.tableWidth}px` : 'unset'
     },
     right() {
       return this.type === 'right' ? 111 + 'px' : 'unset';

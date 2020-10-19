@@ -159,6 +159,7 @@
         <time-indicator
           :guestureGrantBodyMove="guestureGrantBodyMove"
           :viewTranslateX="translateX"
+          :tableWidth="tableWidth"
           :viewWidth="viewWidth"
           :pxUnitAmp="pxUnitAmp"
           @timeTranslateLocation="locaTimeTranslate"

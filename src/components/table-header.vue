@@ -2,7 +2,11 @@
   <div class="scrollable__3FQe" :style="`width: ${width}px; height: 56px;`">
     <div class="head__NLQw" :style="`width: ${width}px; height: 56px;`">
       <div class="row__29JV" style="height: 56px;">
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[0].width}px;`">
+        <div 
+          class="cell__3xqP resizable__3OIa" 
+          :class="columns[0]._isHandleOver ? 'resize-active__1t-e' : 'resize-default__2DLj'"
+          :style="`width: ${columns[0].width}px;}`"
+        >
           <div class="config__3_dc">
             <div class="head-row-index__24Rh">
               <i class="next-icon next-icon-gear next-medium">
@@ -25,15 +29,32 @@
               </svg>
             </i>
            </div>
-          <div class="handle__cGEN right" data-role="handle"></div>
+          <div 
+            class="handle__cGEN right" 
+            data-role="handle"
+            @mouseover="handleMouseOver(columns[0], true)" 
+            @mouseout="handleMouseOver(columns[0], false)"  
+          ></div>
         </div>
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[1].width}px;`">
+        <div 
+          class="cell__3xqP resizable__3OIa" 
+          :class="columns[1]._isHandleOver ? 'resize-active__1t-e' : 'resize-default__2DLj'"
+          :style="`width: ${columns[1].width}px;`">
           <div class="head-cell__cL1U">
             <span class="ellipsis__315v sortable___z3_">执行者</span>
           </div>
-          <div class="handle__cGEN right" data-role="handle"></div>
+          <div 
+            class="handle__cGEN right" 
+            data-role="handle"
+            @mouseover="handleMouseOver(columns[1], true)" 
+            @mouseout="handleMouseOver(columns[1], false)"  
+          ></div>
         </div>
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[2].width}px;`">
+        <div 
+          class="cell__3xqP resizable__3OIa" 
+          :class="columns[2]._isHandleOver ? 'resize-active__1t-e' : 'resize-default__2DLj'"
+          :style="`width: ${columns[2].width}px;`"
+        >
           <div class="head-cell__cL1U">
             <span class="ellipsis__315v sortable___z3_">
               截止时间
@@ -45,13 +66,27 @@
               </i>
             </span>
           </div>
-          <div class="handle__cGEN right" data-role="handle"></div>
+          <div 
+            class="handle__cGEN right" 
+            data-role="handle"
+            @mouseover="handleMouseOver(columns[2], true)" 
+            @mouseout="handleMouseOver(columns[2], false)"  
+          ></div>
         </div>
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[3].width}px;`">
+        <div 
+          class="cell__3xqP resizable__3OIa" 
+          :class="columns[3]._isHandleOver ? 'resize-active__1t-e' : 'resize-default__2DLj'"
+          :style="`width: ${columns[3].width}px;`"
+        >
           <div class="head-cell__cL1U">
             <span class="ellipsis__315v">前置依赖</span>
           </div>
-          <div class="handle__cGEN right" data-role="handle"></div>
+          <div 
+            class="handle__cGEN right"
+            data-role="handle"
+            @mouseover="handleMouseOver(columns[3], true)" 
+            @mouseout="handleMouseOver(columns[3], false)"  
+          ></div>
         </div>
       </div>
     </div>
@@ -75,12 +110,22 @@
       columns: {
         type: Array,
         default: () => [] 
+      },
+      isHandleOver: {
+        type: Boolean,
+        default: false,
       }
+    },
+    data() {
+      return {};
     },
     methods: {
       onAllRowOpen() {
         this.$emit('onAllRowOpen');
-      }
+      },
+      handleMouseOver(column, isOver) {
+        this.$emit('handleMouseOver', column, isOver);
+      },
     }
   }
 </script>

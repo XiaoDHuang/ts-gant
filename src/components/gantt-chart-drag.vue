@@ -10,11 +10,13 @@
         :height="viewHeight">
         <div :class="{ scrolling__1B1k: guestureGrantBodyMove }" class="scroll-indicator__3aij" style="left: -8px; width: 8px;"></div>
         <header>
-          <table-header 
+          <table-header
+            ref="tableHeader"
             :collapsed="collapsed"
             :width="tableWidth"
             :columns="columns"
             @onAllRowOpen="onAllRowOpen"
+            @handleMouseOver="layHandleMouseOver"
           ></table-header>
           <div 
             ref="timeAxisRender" 
@@ -64,6 +66,7 @@
             @onMouseLeave="showSelectionIndicator = false"
             @mousemove="deOnMouseMove"
             @onRowOpen="onRowOpen"
+            @handleMouseOver="layHandleMouseOver"
           ></table-body>
           <div
             ref="chartView"
@@ -278,7 +281,10 @@ const columns = [
     sortable: false,
   },
 ];
- 
+columns.forEach(item => {
+  item._isHandleOver = false;
+}); 
+
 const dataList = [
   {
     executor: null,
@@ -396,8 +402,8 @@ const viewTypeList = [
 
 const minViewRate = .38;
 
-const minWidth = 500;
-const minViewWidth = 200;
+// const minWidth = 500;
+// const minViewWidth = 200;
 
 /** 时间定位相关逻辑 */
 const locationModule = {
@@ -408,6 +414,21 @@ const locationModule = {
 
 /** 排版相关逻辑 */
 const layout = {
+  data() {
+    return {
+      layIsHandleOver: false,
+    }
+  },
+  watch: {
+    columns: {
+      handler(val) {
+        val.forEach(item => {
+          item._isHandleOver = false;
+        });
+      },
+      immediate: true,
+    }
+  },
   methods: {
     showTable() {
       if (this.tableWidth > 0) {
@@ -418,8 +439,13 @@ const layout = {
 
       this.viewWidth = this.gantW - this.tableWidth;
     },
+    layHandleMouseOver(column, isOver) {
+      column._isHandleOver = isOver;
+      this.$refs.tableHeader.$forceUpdate();
+    }
   },
   mounted() {
+
     addResizeListener(this.$refs.gantAppView, () => {
       const width = this.$refs.gantAppView.clientWidth;
       const height = this.$refs.gantAppView.clientHeight;

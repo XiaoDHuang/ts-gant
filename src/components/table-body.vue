@@ -14,9 +14,15 @@
         <div 
           v-for="(item, key) in columns" 
           :key="key" 
-          class="cell__3xqP resize-default__2DLj resizable__3OIa" 
+          class="cell__3xqP resizable__3OIa" 
+          :class="columns[key]._isHandleOver ? 'resize-active__1t-e' : 'resize-default__2DLj'"
           :style="`width: ${item.width}px;`">
-          <div class="handle__cGEN right" data-role="handle"></div>
+          <div 
+            class="handle__cGEN right" 
+            data-role="handle"
+            @mouseover="handleMouseOver(columns[key], true)" 
+            @mouseout="handleMouseOver(columns[key], false)"  
+          ></div>
         </div>
       </div>
       <template v-for="(barInfo, index) in dataList">
@@ -27,7 +33,11 @@
           :class="{hovered: barInfo.getHovered(barInfo.translateY, selectionIndicatorTop) && showSelectionIndicator}"
           :style="`top: ${barInfo.translateY - 10}px; height: ${rowHeight}px;`" 
         >
-          <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[0].width}px;`">
+          <div 
+            class="cell__3xqP resizable__3OIa" 
+            :class="columns[0]._isHandleOver ? 'resize-active__1t-e' : 'resize-default__2DLj'"
+            :style="`width: ${columns[0].width}px;`"
+          >
             <div class="row-before__3blm" style="padding-left: 56px;">
               <div class="row-index__3xNX" title="1" style="width: 24px;">{{index + 1}}</div>
               <div class="row-indentation__2dHs" :style="`background-size: ${indent}px; width: ${getIndent(barInfo._depth)}px;`"></div>
@@ -56,44 +66,62 @@
                 <div class="ellipsis hinted" :data-title="barInfo.label">{{barInfo.label}}</div>
               </div>
             </div>
-            <div class="handle__cGEN right" data-role="handle"></div>
+            <div 
+              class="handle__cGEN right" 
+              data-role="handle"
+              @mouseover="handleMouseOver(columns[0], true)" 
+              @mouseout="handleMouseOver(columns[0], false)"  
+            ></div>
           </div>
-          <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[1].width}px;`">
+          <div 
+            class="cell__3xqP resizable__3OIa" 
+            :class="columns[1]._isHandleOver ? 'resize-active__1t-e' : 'resize-default__2DLj'"
+            :style="`width: ${columns[1].width}px;`"
+          >
             <div class="body-cell__OUd5 executor__1eK3 hasPermission empty"><span data-role="avatar"
                 class="avatar__1gRA avatar-xsmall__pF8f avatar-circle__3q2Y gantt-app-outline-executor-avatar"
                 shape="circle"
                 style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAABGlBMVEWmpqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqampqapqamtra2zs7O6urrAwMDCwsLDw8PExMTFxcXGxsbKysrMzMzS0tLY2Nje3t7f39/i4uLk5OTm5ubp6ent7e3v7+/x8fH09PT5+fn6+vr9/f3+/v7///9sumsYAAAAQHRSTlMABAUGExQWFxkaGxwlJikqTk9QUVdYW1xmaXBxcnV2enuNjo+TlJW2t7jLzM7P0NjZ2+zt7vHy8/T19vj5+vz+SWi1rwAAAhZJREFUGBmFwQ1b0mAUBuATirYyJZMCib6WikIqqUwxt6e5aeEGCoQ4Pf//byS6C8/7buB9U8LcilnZ2Ts+3tupmCtz9IzZ0pYDwdkqzdJkL78eIuHou0HpXpQtpLLKGUqxUMNEP5Yo4e0BprCWSVOwMZVdIEURzyqSkLOh8IMwDH0Xkp2jsUULgtuJ+FHXg2AtUiyzDcGL+EkAYTtDj8oQ3CFLHoRP9MCwILRZMYBgGTSyBsGNWOVDWKd72SYEnzUhhGaWiFYh+awJIa0SURWSz5oQ0hbRnAPJZY0PyTEoD1XEKg+K92RC4Q5Z5UFhUgWKkDVdKDaoDkXImj4UdWpAEbCmA0WDoHIHrIg8qAi6PguRC9UvakATstCF5ifVoTllIYCmThXo2jw2gG6DTCQMOBadQmdSHgktjrWR8IHmHeh8joXQOQZRFbqQY13oqkS0Cl2fY5ELzUciyjahCnisA1UzS/fWoQhZ6LiQ1mnEsPDE77NiGOCJZdCDMmJu0OeEYXiK2Cd6lKlhxOtEnK7bwkgtQ7GFAyAY8BTD8Dcab2gsZ+OSp7qEnSOhCFzwFBdAkRQFG61bnuCuBbtAmuUDeD1O1fNgvaOEhRrw5x8nDP4C20uUYuZzEzi7umPh7uoMaH6ZoXSvvh0COG/3rm9ub2+ue+1zAEdrr2mybKnqQHCqpSw9Yz5vbu7un5zs726a+XnS/QfUNwZ8HxlD9AAAAABJRU5ErkJggg==&quot;);"></span><span
                 class="text">待认领</span></div>
-            <div class="handle__cGEN right" data-role="handle"></div>
+            <div 
+              class="handle__cGEN right" 
+              data-role="handle"
+              @mouseover="handleMouseOver(columns[1], true)" 
+              @mouseout="handleMouseOver(columns[1], false)"  
+            ></div>
           </div>
-          <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[2].width}px;`">
+          <div 
+            class="cell__3xqP resizable__3OIa" 
+            :class="columns[2]._isHandleOver ? 'resize-active__1t-e' : 'resize-default__2DLj'"
+            :style="`width: ${columns[2].width}px;`"
+          >
             <div class="body-cell__OUd5 date__hqPF hasPermission">
               <span class="text">{{barInfo._dateFormat(barInfo.task.endDate)}}</span>
             </div>
-            <div class="handle__cGEN right" data-role="handle"></div>
+            <div 
+              class="handle__cGEN right" 
+              data-role="handle"
+              @mouseover="handleMouseOver(columns[2], true)" 
+              @mouseout="handleMouseOver(columns[2], false)"  
+            ></div>
           </div>
-          <div class="cell__3xqP resize-default__2DLj resizable__3OIa" :style="`width: ${columns[3].width}px;`">
+          <div 
+            class="cell__3xqP resizable__3OIa" 
+            :class="columns[3]._isHandleOver ? 'resize-active__1t-e' : 'resize-default__2DLj'"
+            :style="`width: ${columns[3].width}px;`"
+          >
             <div class="body-cell__OUd5 lead-dependency__3cgD empty__28lE">
               <span class="text__3Q8b">待填写</span>
             </div>
-            <div class="handle__cGEN right" data-role="handle"></div>
+            <div 
+              class="handle__cGEN right" 
+              data-role="handle"
+              @mouseover="handleMouseOver(columns[3], true)" 
+              @mouseout="handleMouseOver(columns[3], false)"  
+            ></div>
           </div>
         </div>
       </template>
-      <div class="row__29JV" style="top: 200px; height: 4px;">
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 304px;">
-          <div class="handle__cGEN right" data-role="handle"></div>
-        </div>
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 115px;">
-          <div class="handle__cGEN right" data-role="handle"></div>
-        </div>
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 127px;">
-          <div class="handle__cGEN right" data-role="handle"></div>
-        </div>
-        <div class="cell__3xqP resize-default__2DLj resizable__3OIa" style="width: 70px;">
-          <div class="handle__cGEN right" data-role="handle"></div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -152,6 +180,9 @@ export default {
     },
     onMouseLeave(event) {
       this.$emit('onMouseLeave', event);
+    },
+    handleMouseOver(column, isOver) {
+      this.$emit('handleMouseOver', column, isOver);
     },
   }
 }

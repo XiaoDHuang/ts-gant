@@ -301,6 +301,47 @@
   height: 17px
 }
 
+.handle__cGEN {
+  position: absolute;
+  z-index: 1
+}
+
+.handle__cGEN.left {
+  top: 0;
+  bottom: 0;
+  left: -1.5px;
+  border-left: 2px solid transparent;
+  cursor: ew-resize
+}
+
+.handle__cGEN.right {
+  top: 0;
+  bottom: 0;
+  right: -1.5px;
+  border-right: 2px solid transparent;
+  cursor: ew-resize
+}
+
+.handle__cGEN.top {
+  left: 0;
+  right: 0;
+  top: -1.5px;
+  border-top: 2px solid transparent;
+  cursor: ns-resize
+}
+
+.handle__cGEN.bottom {
+  left: 0;
+  right: 0;
+  bottom: -1.5px;
+  border-bottom: 2px solid transparent;
+  cursor: ns-resize
+}
+
+.handle__cGEN.resizing,.handle__cGEN:hover {
+  border-color: #1b9aee
+}
+
 .resize-handle__3s57 {
   position: absolute;
   left: 0;

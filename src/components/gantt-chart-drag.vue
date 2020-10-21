@@ -683,7 +683,7 @@ export default {
         height = this.gantBodyH;
       }
 
-      return height + rowHeight;
+      return height + 2 * rowHeight;
     },
     svgViewH() {
       return this.gantBodyScrollH;

@@ -6,6 +6,16 @@
 
 <script>
 import TsGantt from "@/components";
+
+/** 时间列表 **/
+
+/**
+ * onRowCreate // 任务创建
+ * onRowDelete // 任务删除
+ * onRowIndent  // 任务缩进
+ * onRowChangeName  // 任务修改
+ */
+
 export default {
   name: "app",
   data() {
@@ -147,6 +157,5 @@ export default {
 }
 
 html, body {
-  min-height: 668px;
 }
 </style>

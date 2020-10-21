@@ -7,7 +7,7 @@
         id="gantt-body" 
         class="body__3LBc gantt__3Xim"
         :width="gantW" 
-        :height="viewHeight">
+        :height="gantH">
         <div 
           :class="{ scrolling__1B1k: guestureGrantBodyMove }" 
           class="scroll-indicator__3aij" style="left: -8px; width: 8px;">
@@ -52,7 +52,7 @@
             </div>
           </div>
         </header>
-        <main>
+        <main ref="gantMainEl">
           <div
             class="selection-indicator__3rr6" 
             v-show="showSelectionIndicator" 
@@ -62,11 +62,10 @@
             :showSelectionIndicator="showSelectionIndicator"
             :selectionIndicatorTop="selectionIndicatorTop"
             :table-width="tableWidth" 
-            :dataList="barList" 
             :table-height="svgViewH"
+            :dataList="barList" 
             :columns="columns"
             :layGesture="layGesture"
-            @onMouseEnter="onMouseEnter"
             @onMouseLeave="showSelectionIndicator = false"
             @mousemove="deOnMouseMove"
             @onRowOpen="onRowOpen"
@@ -75,7 +74,6 @@
             ref="chartView"
             @wheel.prevent="wheel"
             @mouseup="shadowGesturePressup"
-            @mouseenter.prevent="onMouseEnter"
             @mousemove="deOnMouseMove"
             @mouseleave="showSelectionIndicator = false"
             class="chart__3nGi" 
@@ -109,7 +107,7 @@
                 <path v-show="shadowGestBarRight" :d="`M${shadowGestBarRight},0 L${shadowGestBarRight},${svgViewH}`"></path>
               </g>
             </svg>
-            <div class="render-chunk__22Ez" :style="`height: 178px; transform:translateX(-${translateX}px;`">
+            <div class="render-chunk__22Ez" :style="`height: ${svgViewH}px; transform:translateX(-${translateX}px;`">
               <template v-for="(bar, index) in barList" >
                 <task-bar-thumb
                   v-if="getshowTaskBar(bar.width, bar.translateX, translateX) && !bar.invalidDateRange"
@@ -214,7 +212,6 @@ dayjs.extend(advancedFormat);
 dayjs.extend(isBetween);
 dayjs.extend(isLeapYear);
 
-
 window.dayjs = dayjs;
 // console.log(TimeIndicator, '>>>>>>>');
 /*
@@ -233,6 +230,8 @@ const aTick = ("function" === typeof requestAnimationFrame) ? requestAnimationFr
   e => setTimeout(() => e(Date.now()), 1e3 / 60);
 
 // const pxUnitAmp = (60 * 60 * 24 / 30) * 1000;
+const topTap = 4;
+const headerH = 56;
 const rowHeight = 28;
 
 // const barList = [
@@ -468,8 +467,8 @@ const layout = {
       const height = this.$refs.gantAppView.clientHeight;
 
       this.gantW = width;
-      this.viewHeight = height;
-
+      this.gantH = height;
+      this.viewHeight = height - headerH;
       
       this.tableWidth = this.columns.reduce((width, item) => width+ item.width, 0);
       this.viewWidth = this.gantW - this.tableWidth;
@@ -636,12 +635,14 @@ export default {
     const viewTypeObj = viewTypeList[0];
     const translateX = dayjs(startDate).valueOf() / (viewTypeObj.value * 1000);
     const gantW = this.width; 
+    const gantH = this.height; 
     const viewWidth = 704;
     const tableWidth = 616;
     const collapsed = this.dataList.every(bar => bar.collapsed);
 
     return {
       gantW,
+      gantH,
       viewWidth,
       viewHeight: this.height,
       tableWidth,
@@ -671,8 +672,21 @@ export default {
     };
   },
   computed: {
+    // 内容区滚动高度
+    gantBodyH() {
+      return this.gantH - headerH;
+    },
+    //内容区滚动区域域高度
+    gantBodyScrollH() {
+      let height = this.barList.length * rowHeight + topTap;
+      if (height < this.gantBodyH) {
+        height = this.gantBodyH;
+      }
+
+      return height + rowHeight;
+    },
     svgViewH() {
-      return this.viewHeight - 56;
+      return this.gantBodyScrollH;
     },
     /**
      * 时间起始偏移量
@@ -687,12 +701,6 @@ export default {
     },
   },
   methods: {
-    /** 
-     * 鼠标进入图表区域
-     */
-    onMouseEnter() {
-      this.chartViewTop = this.$refs.chartView.getBoundingClientRect().top;
-    },
     /**
      * 光标在图表区域滑动 选中行进行移动对应行数据
      */
@@ -701,9 +709,10 @@ export default {
         this.showSelectionBar(event);
       }
     },
-    
-   
     getBarList() {
+      return this.dataTransfer(this.dataList);
+    },
+    dataTransfer(dataList) {
       const pxUnitAmp = this.pxUnitAmp;
       const minStamp = 11 * pxUnitAmp;
       const height = 8;
@@ -804,11 +813,13 @@ export default {
         return isShow;
       }
 
+      // 进行展开扁平
       const getDataList = () => {
-        return flattenDeep(this.dataList) 
+        return flattenDeep(dataList) 
       };
 
-      const dataList = getDataList();
+
+      dataList = getDataList();
 
       return dataList.map((item, index) => {
         let startAmp = dayjs(item.startDate || 0).valueOf();
@@ -838,8 +849,9 @@ export default {
           setShadowShow,
           setInvalidTaskBar,
           getHovered,
-          _collapsed: item.collapsed,
-          _depth: item._depth,
+          _collapsed: item.collapsed,  // 是否折叠
+          _depth: item._depth,  // 表示子节点深度
+          _parentTask: item._parent,
           _childrenCount: !item.children ? 0 : item.children.length,
           _dateFormat,
         }
@@ -1169,10 +1181,10 @@ export default {
      * 计算位置
      */
     showSelectionBar(event) {
-      /** TODO 增加节流机制更平滑 */
       const topMargin = 4;
       const rowH = 28;
-      const offsetY = event.clientY - this.chartViewTop;
+      const scrollTop = this.$refs.gantMainEl.scrollTop
+      const offsetY = event.clientY - headerH + scrollTop;
 
       if (offsetY < topMargin) {
         this.showSelectionIndicator = false;

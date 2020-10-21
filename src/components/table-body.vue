@@ -63,11 +63,15 @@
               </div>
             </div>
             <div class="body-cell__OUd5 content">
-              <div v-if="!barInfo.task._cacheData" class="text__aNJc">
+              <div 
+                v-if="getContentReadOnly(barInfo)" 
+                class="text__aNJc"
+                @click="editTaskContent(barInfo)"
+              >
                 <div class="ellipsis hinted">{{barInfo.label}}</div>
               </div>
               <template v-else>
-                <Input />
+                <Input :value="barInfo.label" :barInfo="barInfo" />
               </template>
             </div>
             <div 
@@ -184,6 +188,16 @@ const getCacheData = ()  => {
   }; 
 }
 const Input = {
+  props: {
+    value: {
+      type: String,
+      default: '',
+    },
+    barInfo: {
+      type: Object,
+      default: () => {}
+    }
+  },
   methods: {
     /**
      * 触发失焦事件完成任务添加
@@ -191,11 +205,17 @@ const Input = {
     onBlur() {
       const cacheRow = this.$parent.cacheRow; 
       const cacheIdx = this.$parent.cacheIdx; 
-
-      this.$parent.clearCacheRow();
-      let value = this.$refs.input.value;
-      if (value.trim()) {
-        this.$parent.completeAddCacheRow(cacheRow, cacheIdx, value);
+      let value = this.$refs.input.value.trim();
+      if (cacheRow) {
+        this.$parent.clearCacheRow();
+        value && this.$parent.completeAddCacheRow(cacheRow, cacheIdx, value);
+      } else {
+        const task = this.barInfo.task;
+        task._canEdit = false;
+        if (value) {
+          this.barInfo.label = value;
+          task.content = value;
+        }
       }
     },
     /**
@@ -219,7 +239,9 @@ const Input = {
     }
   },
   mounted() {
-    this.$refs.input.focus();
+    const input = this.$refs.input;
+    input.setSelectionRange(this.value.length, this.value.length);
+    input.focus();
   },
   render(h) {
     return h('input',
@@ -228,7 +250,7 @@ const Input = {
         attrs: {
           attrplaceholder: "输入任务标题",
           'data-role': 'input',
-          value: ''
+          value: this.value,
         },
         on: {
           blur: this.onBlur,
@@ -299,10 +321,18 @@ export default {
     }
   },
   methods: {
+    getContentReadOnly(barInfo) {
+      const task = barInfo.task;
+      const readonly = !(task._cacheData || task._canEdit);
+      return readonly;
+    },
     clearCacheRow() {
       this.cacheIdx = -1;
       this.cacheRow = null;
     },
+    /**
+     * 完成任务添加
+     */
     completeAddCacheRow(cacheRow, cacheIdx, value) {
       cacheRow.content = value;
       cacheRow._cacheData = false;
@@ -317,6 +347,12 @@ export default {
 
       this.cacheRow = getCacheData();
       this.cacheIdx = index;
+    },
+    editTaskContent(barInfo) {
+      const task = barInfo.task;
+      task._canEdit = true;
+      console.log(task, '>>>>>>>>>>>>>');
+      this.$forceUpdate();
     },
     getIndent(depth) {
       return this.indent * depth;

@@ -36,12 +36,13 @@ function regDeepParents(row, parent, cb) {
  * @param {*} arr 数据源
  * @param {*} childs  子集key
  */
-function flattenDeep(arr = [], childs = "children", depth = 0) {
+function flattenDeep(arr = [], childs = "children", depth = 0, parent = null) {
   return arr.reduce((flat, item) => {
     item._depth = depth;
+    item._parent = parent;
     return flat.concat(
       item,
-      item[childs] && !item.collapsed ? flattenDeep(item[childs], childs, depth + 1) : []
+      item[childs] && !item.collapsed ? flattenDeep(item[childs], childs, depth + 1, item) : []
     );
   }, []);
 }

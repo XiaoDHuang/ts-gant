@@ -44,9 +44,7 @@
               <div class="row-indentation__2dHs" :style="`background-size: ${indent}px; width: ${getIndent(barInfo._depth)}px;`"></div>
               <div class="row-menu-and-toggler___F4q">
                 <div class="row-menu__QRiG">
-                  <div class="menu-trigger__2YZ4">
-                    <span class="icon__YImk icon dls-icon icon-more" data-role="icon"></span>
-                  </div>
+                  <task-menu></task-menu>
                 </div>
                 <div v-if="getShowTrigger(barInfo)" @click="rowTrigger(barInfo)" class="row-toggler__3rTS">
                   <div class="body-row-toggler__wvWq" :class="{collapsed: barInfo._collapsed}">
@@ -68,7 +66,9 @@
                 class="text__aNJc"
                 @click="editTaskContent(barInfo)"
               >
-                <div class="ellipsis hinted">{{barInfo.label}}</div>
+                <div class="ellipsis hinted">
+                  <span>{{barInfo.label}}</span>
+                </div>
               </div>
               <template v-else>
                 <Input :value="barInfo.label" :barInfo="barInfo" />
@@ -176,6 +176,8 @@
   </div>
 </template>
 <script>
+import TaskMenu from './task-menu';
+
 const indent = 38;
 const getCacheData = ()  => {
   return {
@@ -265,6 +267,12 @@ const Input = {
 export default {
   components: {
     Input,
+    TaskMenu,
+    // aDropdown,
+    // TaskMenu,
+    // elDropdown,
+    // elDropdownMenu,
+    // elDropdownItem,
   },
   props: {
     showSelectionIndicator: {

@@ -38,7 +38,11 @@
                     <span class="text">插入新任务</span>
                     <span class="hotkey"><b>enter</b></span>
                   </li>
-                  <li class="menu-item__dkeQ" data-role="menu-item">
+                  <li 
+                    @click="inserChildTask"
+                    class="menu-item__dkeQ" 
+                    data-role="menu-item"
+                  >
                     <span class="text">插入子任务</span>
                   </li>
                   <a class="popup-menu-link__wpP-">
@@ -142,6 +146,10 @@ export default {
     },
     insertTask() {
       this.$emit('insertTask');
+      this.visible = false;
+    },
+    inserChildTask() {
+      this.$emit('inserChildTask', this.barInfo);
       this.visible = false;
     },
     confirmDelete() {

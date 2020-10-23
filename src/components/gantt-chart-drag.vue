@@ -295,6 +295,7 @@ const dataList = [
     startDate: '2020-07-01 08:02:02',
     endDate: '2020-07-02',
     collapsed: false,
+    children: [],
   },
   {
     executor: null,
@@ -341,6 +342,7 @@ const dataList = [
     startDate: null,
     endDate: null, 
     collapsed: false,
+    children: [],
   },
   {
     executor: null,
@@ -348,6 +350,7 @@ const dataList = [
     startDate: '2020-08-18',
     endDate: '2020-08-19', 
     collapsed: false,
+    children: [],
   },
   {
     executor: null,
@@ -355,6 +358,7 @@ const dataList = [
     startDate: '2020-08-20',
     endDate: '2020-08-25', 
     collapsed: false,
+    children: [],
   },
   {
     executor: null,
@@ -362,13 +366,15 @@ const dataList = [
     startDate: '2020-07-01',
     endDate: '2020-09-06', 
     collapsed: false,
+    children: [],
   },
   {
     executor: null,
     content: '绘制表盘设计逻辑"',
     startDate: '2020-08-20',
     endDate: '2020-09-06', 
-    collapsed: false
+    collapsed: false,
+    children: [],
   },
 ];
 

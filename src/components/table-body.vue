@@ -48,6 +48,7 @@
                     :barInfo="barInfo" 
                     @deleteTask="(closeFn) => deleteTask(barInfo, closeFn)"
                     @insertTask="() => insertTask(barInfo)"
+                    @inserChildTask="inserChildTask"
                   ></task-menu>
                 </div>
                 <div v-if="getShowTrigger(barInfo)" @click="rowTrigger(barInfo)" class="row-toggler__3rTS">
@@ -319,11 +320,11 @@ export default {
         if (!parent)  {
           children = dataList;
         } else {
+          !parent.children && (parent.children = []);
           children = parent.children;
         }
 
         children.splice(this.cacheIdx, 0, this.cacheRow);
-
         this.$parent.barList = this.$parent.getBarList();
       }
     }
@@ -343,7 +344,14 @@ export default {
       this.cacheIdx = -1;
       this.cacheRow = null;
     },
-    
+    /**
+     * 插入子任务
+     */
+    inserChildTask(barInfo) {
+      const task = barInfo.task;
+      task.collapsed = false;
+      this.addCacheTask(task);
+    },
     /**
      * 添加数据缓存
      * index 添加数据的位置

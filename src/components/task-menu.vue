@@ -29,7 +29,12 @@
                     <span class="text">向左提升一级</span>
                     <span class="hotkey"><b>shift</b>+<b>tab</b></span>
                   </li>
-                  <li class="menu-item__dkeQ" data-role="menu-item">
+                  <li 
+                    v-if="barInfo._depth> 0" 
+                    class="menu-item__dkeQ" 
+                    data-role="menu-item"
+                    @click="insertTask"
+                  >
                     <span class="text">插入新任务</span>
                     <span class="hotkey"><b>enter</b></span>
                   </li>
@@ -108,6 +113,12 @@ export default {
     aDropdown,
     MenuWrap,
   },
+  props: {
+    barInfo: {
+      type: Object,
+      default: () => {}
+    }
+  },
   data() {
     return {
       visible: false,
@@ -128,6 +139,10 @@ export default {
     },
     deleteTask() {
       this.isDelete = true;
+    },
+    insertTask() {
+      this.$emit('insertTask');
+      this.visible = false;
     },
     confirmDelete() {
       this.$emit('deleteTask', () => {

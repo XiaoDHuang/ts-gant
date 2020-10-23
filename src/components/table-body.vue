@@ -44,7 +44,11 @@
               <div class="row-indentation__2dHs" :style="`background-size: ${indent}px; width: ${getIndent(barInfo._depth)}px;`"></div>
               <div class="row-menu-and-toggler___F4q">
                 <div class="row-menu__QRiG">
-                  <task-menu @deleteTask="(closeFn) => deleteTask(barInfo, closeFn)"></task-menu>
+                  <task-menu
+                    :barInfo="barInfo" 
+                    @deleteTask="(closeFn) => deleteTask(barInfo, closeFn)"
+                    @insertTask="() => insertTask(barInfo)"
+                  ></task-menu>
                 </div>
                 <div v-if="getShowTrigger(barInfo)" @click="rowTrigger(barInfo)" class="row-toggler__3rTS">
                   <div class="body-row-toggler__wvWq" :class="{collapsed: barInfo._collapsed}">
@@ -150,7 +154,7 @@
               class="textbtn-color-blue__361l" 
               type="button" 
               data-role="text-button"
-              @click="addCacheTask(dataList.length)"
+              @click="addCacheTask()"
             >
               <i class="next-icon next-icon-plus next-medium">
                 <svg viewBox="0 0 1024 1024">
@@ -186,7 +190,9 @@ const getCacheData = ()  => {
     startDate: null,
     endDate: null,
     collapsed: false,
-    _cacheData: true,
+    children: [],
+    _cacheData: true, // 标识是否属于缓存数据
+    _canEdit: false,  // 控制输入框
   }; 
 }
 const Input = {
@@ -205,20 +211,8 @@ const Input = {
      * 触发失焦事件完成任务添加
      */
     onBlur() {
-      const cacheRow = this.$parent.cacheRow; 
-      const cacheIdx = this.$parent.cacheIdx; 
       let value = this.$refs.input.value.trim();
-      if (cacheRow) {
-        this.$parent.clearCacheRow();
-        value && this.$parent.completeAddCacheRow(cacheRow, cacheIdx, value);
-      } else {
-        const task = this.barInfo.task;
-        task._canEdit = false;
-        if (value) {
-          this.barInfo.label = value;
-          task.content = value;
-        }
-      }
+      this.$parent.completeInput(this.barInfo, value);
     },
     /**
      * enter 事件按下并且 添加新纪录 连续添加任务
@@ -236,7 +230,7 @@ const Input = {
       if (!value.trim()) return;
       input.blur();
       this.$parent.$nextTick(() => {
-        this.$parent.addCacheTask(this.$parent.dataList.length);
+        this.$parent.addCacheTask(this.barInfo._parent);
       });
     }
   },
@@ -316,15 +310,26 @@ export default {
     }
   },
   watch: {
+    cacheRow(val) {
+      if (val) {
+        const dataList = this.$parent.dataList;
+        let parent = this.cacheRow._parent;
+        let children = [];
+
+        if (!parent)  {
+          children = dataList;
+        } else {
+          children = parent.children;
+        }
+
+        children.splice(this.cacheIdx, 0, this.cacheRow);
+
+        this.$parent.barList = this.$parent.getBarList();
+      }
+    }
   },
   computed: {
     rowDataList() {
-      if (this.cacheRow)  {
-        let dataList = [...this.$parent.dataList];
-        dataList.splice(this.cacheIdx, 0, this.cacheRow);
-        return this.$parent.dataTransfer(dataList);
-      }
-      
       return this.dataList;
     }
   },
@@ -343,23 +348,69 @@ export default {
      * 添加数据缓存
      * index 添加数据的位置
      */
-    addCacheTask(index) {
+    addCacheTask(parent = null) {
       if (this.cacheRow) return;
 
       this.cacheRow = getCacheData();
-      this.cacheIdx = index;
+      this.cacheRow._parent = parent;
+
+      if (!parent) {
+        this.cacheIdx = this.$parent.dataList.length;
+      } else {
+        this.cacheIdx = (parent.children || []).length;
+      }
     },
     /**
-     * 完成任务添加操作
+     * 完成数据的添加操作
+     */
+    completeAdd(barInfo, value) {
+      const task = this.cacheRow;
+      const parent = barInfo._parent;
+
+      // 完成添加操作
+      barInfo.label = value;
+      task.content = value;
+      task._canEdit = false;
+      task._cacheData = false;
+
+      this.cacheIdx = -1;
+      this.cacheRow = null;
+      
+      // 如果值不为空
+      if (value) {
+        return;
+      }
+
+      if (!parent) {
+        this.$parent.dataList.splice(this.cacheIdx, 1);
+      } else {
+        parent.children.splice(this.cacheIdx, 1);
+      }
+
+      this.$parent.barList = this.$parent.getBarList();
+    },
+    /**
+     * 完成编辑操作
+     */
+    completeEdit(barInfo, value) {
+      const task = barInfo.task;
+      barInfo.label = value;
+      task.content = value;
+      task._canEdit = false;
+      task._cacheData = false;
+    },
+    /**
+     * 完成任务添加编辑操作
      * cacheRow 临时添加缓存数据
      * cacheRow 需要添加的位置
      * vlaue 添加输入框编辑的内容
      */
-    completeAddCacheRow(cacheRow, cacheIdx, value) {
-      cacheRow.content = value;
-      cacheRow._cacheData = false;
-      this.$parent.dataList.splice(cacheIdx, 0, cacheRow);
-      this.$parent.barList = this.$parent.getBarList();
+    completeInput(barInfo, value) {
+      if (this.cacheRow) {
+        this.completeAdd(barInfo, value);
+      } else {
+        this.completeEdit(barInfo, value);
+      }
     },
     /**
      * 对内容触发编辑操作
@@ -378,13 +429,21 @@ export default {
      */
     deleteTask(barInfo, closeFn) {
       const index = barInfo._index;
-      if (barInfo._parentTask) {
-        barInfo._parentTask.children.splice(index, 1);
+      if (barInfo._parent) {
+        barInfo._parent.children.splice(index, 1);
       } else {
         this.$parent.dataList.splice(index, 1);
       }
       this.$parent.barList = this.$parent.getBarList();
       closeFn && closeFn();
+    },
+    /**
+     * 插入同级别新任务
+     */
+    insertTask(barInfo) {
+      if (!barInfo._parent) return;
+      this.addCacheTask(barInfo._parent);
+      this.cacheRow._depth = barInfo._depth;
     },
     getIndent(depth) {
       return this.indent * depth;

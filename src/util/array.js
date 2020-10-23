@@ -55,7 +55,7 @@ function flattenDeep(arr = [], childs = "children", depth = 0, parent = null) {
  * 深拷贝
  * @param {*} source 要拷贝的数据
  */
-function deepClone(source) {
+function deepClone(source, traverse = (node, newNode) => ([node, newNode])) {
   if (!source && typeof source !== "object") {
     throw new Error("error arguments", "shallowClone");
   }
@@ -63,7 +63,9 @@ function deepClone(source) {
   Object.keys(source).forEach(keys => {
     if (source[keys] && typeof source[keys] === "object") {
       targetObj[keys] = source[keys].constructor === Array ? [] : {};
-      targetObj[keys] = deepClone(source[keys]);
+      const clone = deepClone(source[keys]);
+      traverse(source[keys], clone);
+      targetObj[keys] = clone; 
     } else {
       targetObj[keys] = source[keys];
     }
@@ -124,7 +126,30 @@ function deepChangeObject(data) {
   return tmp;
 }
 
+/**
+ * 递归调用
+ * @param {Node} root
+ * @return {number[]}
+ */
+function dfsCloneNode(nodeArr, callback = () => {}) {
+  const traverse = (node) => {
+    if (!node) return;
+
+    let newNode = { ...node };
+    callback(node, newNode);
+    newNode.children = (newNode.children || []).map(node => traverse(node));
+
+    return newNode;
+  }
+
+  return nodeArr.map(node => {
+    return traverse(node)
+  });
+}
+
+
 export {
+  dfsCloneNode,
   flattenDeep, // 将树转化为一维数组
   deepClone, // 深拷贝
   getMax, // 获取最大值

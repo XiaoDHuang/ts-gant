@@ -37,9 +37,13 @@ function regDeepParents(row, parent, cb) {
  * @param {*} childs  子集key
  */
 function flattenDeep(arr = [], childs = "children", depth = 0, parent = null) {
+  let index = 0;
   return arr.reduce((flat, item) => {
     item._depth = depth;
     item._parent = parent;
+    item._index = index;
+    index++;
+
     return flat.concat(
       item,
       item[childs] && !item.collapsed ? flattenDeep(item[childs], childs, depth + 1, item) : []

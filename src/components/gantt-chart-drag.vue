@@ -835,6 +835,7 @@ export default {
         let translateX = startAmp / pxUnitAmp;
         let translateY = baseTop + index * topStep;
 
+        
         return {
           task: item,
           translateX,
@@ -851,8 +852,9 @@ export default {
           getHovered,
           _collapsed: item.collapsed,  // 是否折叠
           _depth: item._depth,  // 表示子节点深度
-          _parentTask: item._parent,
-          _childrenCount: !item.children ? 0 : item.children.length,
+          _index: item._index,  // 任务下标位置
+          _parentTask: item._parent, // 原任务数据
+          _childrenCount: !item.children ? 0 : item.children.length, // 子任务
           _dateFormat,
         }
       })

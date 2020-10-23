@@ -17,9 +17,11 @@
                   <span @click="close" class="icon__YImk icon dls-icon icon-remove popup-menu-close__102T" data-role="icon"></span>
                 </div>
               </div>
-              <div class="separator-full__2UhN" data-role="separator"></div>
+              <div class="separator-full__2UhN" data-role="separator">
+
+              </div>
               <div class="popup-menu-view__fI0k popup-body__37yU">
-                <ul class="menu__21sM main-view__KEvn" data-role="menu">
+                <ul v-if="!isDelete" class="menu__21sM main-view__KEvn" data-role="menu">
                   <li class="menu-item__dkeQ" data-role="menu-item">
                     <span class="text">点击进入任务详情</span>
                   </li>
@@ -41,11 +43,22 @@
                   </a>
                   <li class="separator__3vM5" data-role="separator"></li>
                   <a class="popup-menu-link__wpP-">
-                    <li class="menu-item__dkeQ danger__2yG_" data-role="menu-item">
+                    <li @click="deleteTask" class="menu-item__dkeQ danger__2yG_" data-role="menu-item">
                       <span class="text">移到回收站</span>
                     </li>
                   </a>
                 </ul>
+                <div v-else class="archive__3_58">
+                  <p>你确定要把 1 个任务移到回收站吗？</p>
+                  <button
+                    @click="confirmDelete"
+                    class="btn-type-primary__2LYT btn-danger__1BqI btn-block__1VgC" 
+                    type="button"
+                    data-role="button"
+                  >
+                    <span>移到回收站</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -98,16 +111,30 @@ export default {
   data() {
     return {
       visible: false,
+      isDelete: false,
     }
   },
   watch: {
     visible(val) {
       MenuMaskComponent.visible = val;
+      if (!val) {
+        this.isDelete = false;
+      }
     }
   },
   methods: {
     close() {
       this.visible = false;
+    },
+    deleteTask() {
+      this.isDelete = true;
+    },
+    confirmDelete() {
+      this.$emit('deleteTask', () => {
+        this.visible = false;
+        this.isDelete = false;
+        MenuMaskComponent.visible = false;
+      });
     }
   },
   mounted() {
@@ -116,6 +143,6 @@ export default {
       MenuMaskComponent = new MenuMaskConstuctor();
       document.body.appendChild(MenuMaskComponent.$mount().$el);
     }
-  }
+  },
 }
 </script>

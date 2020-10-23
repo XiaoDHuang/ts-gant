@@ -44,7 +44,7 @@
               <div class="row-indentation__2dHs" :style="`background-size: ${indent}px; width: ${getIndent(barInfo._depth)}px;`"></div>
               <div class="row-menu-and-toggler___F4q">
                 <div class="row-menu__QRiG">
-                  <task-menu></task-menu>
+                  <task-menu @deleteTask="(closeFn) => deleteTask(barInfo, closeFn)"></task-menu>
                 </div>
                 <div v-if="getShowTrigger(barInfo)" @click="rowTrigger(barInfo)" class="row-toggler__3rTS">
                   <div class="body-row-toggler__wvWq" :class="{collapsed: barInfo._collapsed}">
@@ -338,8 +338,22 @@ export default {
       this.cacheIdx = -1;
       this.cacheRow = null;
     },
+    
     /**
-     * 完成任务添加
+     * 添加数据缓存
+     * index 添加数据的位置
+     */
+    addCacheTask(index) {
+      if (this.cacheRow) return;
+
+      this.cacheRow = getCacheData();
+      this.cacheIdx = index;
+    },
+    /**
+     * 完成任务添加操作
+     * cacheRow 临时添加缓存数据
+     * cacheRow 需要添加的位置
+     * vlaue 添加输入框编辑的内容
      */
     completeAddCacheRow(cacheRow, cacheIdx, value) {
       cacheRow.content = value;
@@ -348,19 +362,29 @@ export default {
       this.$parent.barList = this.$parent.getBarList();
     },
     /**
-     * 添加数据缓存
+     * 对内容触发编辑操作
      */
-    addCacheTask(index) {
-      if (this.cacheRow) return;
-
-      this.cacheRow = getCacheData();
-      this.cacheIdx = index;
-    },
     editTaskContent(barInfo) {
       const task = barInfo.task;
       task._canEdit = true;
-      console.log(task, '>>>>>>>>>>>>>');
       this.$forceUpdate();
+    },
+    /**
+     * 触发删除操作
+     */
+    deleteTaskAction() {},
+    /**
+     * 完成对数据的删除
+     */
+    deleteTask(barInfo, closeFn) {
+      const index = barInfo._index;
+      if (barInfo._parentTask) {
+        barInfo._parentTask.children.splice(index, 1);
+      } else {
+        this.$parent.dataList.splice(index, 1);
+      }
+      this.$parent.barList = this.$parent.getBarList();
+      closeFn && closeFn();
     },
     getIndent(depth) {
       return this.indent * depth;
@@ -378,9 +402,9 @@ export default {
       this.$emit('onMouseLeave', event);
     },
     handleMouseOver(column, isOver) {
-        const type = isOver ? 'mouseOver' : 'mouseLeave';
-        this.layGesture(type, column)
-      },
+      const type = isOver ? 'mouseOver' : 'mouseLeave';
+      this.layGesture(type, column)
+    },
     dispatchGesture(type, event) {
       this.layGesture(type, event);
     }

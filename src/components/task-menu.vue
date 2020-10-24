@@ -1,5 +1,5 @@
 <template>
-  <div class="menu-trigger__2YZ4" :class="{opened: visible}">
+  <div class="menu-trigger__2YZ4" :class="{opened: visible}" @keydown.enter="() => {}">
     <a-dropdown 
       ref="dropdown" 
       v-model="visible" 
@@ -25,12 +25,27 @@
                   <li class="menu-item__dkeQ" data-role="menu-item">
                     <span class="text">点击进入任务详情</span>
                   </li>
-                  <li class="menu-item__dkeQ" data-role="menu-item">
+                  <li 
+                    v-if="barInfo._index > 0" 
+                    @click="moveRightTask"
+                    class="menu-item__dkeQ" 
+                    data-role="menu-item">
+                    <span class="text">向右缩进一级</span>
+                    <span class="hotkey">
+                      <b>tab</b>
+                    </span>
+                  </li>
+                  <li 
+                    v-if="barInfo._depth > 0" 
+                    @click="moveLeftTask"
+                    class="menu-item__dkeQ" 
+                    data-role="menu-item"
+                  >
                     <span class="text">向左提升一级</span>
                     <span class="hotkey"><b>shift</b>+<b>tab</b></span>
                   </li>
                   <li 
-                    v-if="barInfo._depth> 0" 
+                    v-if="barInfo._depth > 0" 
                     class="menu-item__dkeQ" 
                     data-role="menu-item"
                     @click="insertTask"
@@ -150,6 +165,29 @@ export default {
     },
     inserChildTask() {
       this.$emit('inserChildTask', this.barInfo);
+      this.visible = false;
+    },
+    /**
+     * 任务向右边移动
+     * barInfo 任务条数据
+     */
+    moveRightTask() {
+      // 必须有上一个兄弟节点
+      let index = this.barInfo._index;
+      if (index <= 0) return;
+
+      this.$emit('moveRightTask', this.barInfo);
+      this.visible = false;
+    },
+    /**
+     * 任务向左移动
+     * barInfo 任务条数据
+     */
+    moveLeftTask() {
+      let depth = this.barInfo._depth;
+      if (depth <= 0) return;
+
+      this.$emit('moveLeftTask', this.barInfo);
       this.visible = false;
     },
     confirmDelete() {

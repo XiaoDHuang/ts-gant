@@ -310,6 +310,7 @@ const dataList = [
         startDate: '2020-07-01 08:02:02',
         endDate: '2020-07-02',
         collapsed: false,
+        children: [],
       },
       {
         executor: null,

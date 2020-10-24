@@ -49,6 +49,8 @@
                     @deleteTask="(closeFn) => deleteTask(barInfo, closeFn)"
                     @insertTask="() => insertTask(barInfo)"
                     @inserChildTask="inserChildTask"
+                    @moveRightTask="moveRightTask"
+                    @moveLeftTask="moveLeftTask"
                   ></task-menu>
                 </div>
                 <div v-if="getShowTrigger(barInfo)" @click="rowTrigger(barInfo)" class="row-toggler__3rTS">
@@ -216,16 +218,45 @@ const Input = {
       this.$parent.completeInput(this.barInfo, value);
     },
     /**
-     * enter 事件按下并且 添加新纪录 连续添加任务
+     * 按键事件触发
      */
-    onKeydownEnter($event) {
+    keydown($event) {
+      // enter 按键
       if (
-        !$event.type.indexOf("key") &&
-        this._k($event.keyCode, "enter", 13, $event.key, "Enter")
+        !(
+          !$event.type.indexOf("key") &&
+          this._k($event.keyCode, "enter", 13, $event.key, "Enter")
+        )
       ) {
-        return null
+        return this.onKeydownEnter($event);
       }
 
+      // shift + tab 组合按键
+      if (
+        !(
+          !$event.type.indexOf("key") &&
+          this._k($event.keyCode, "tab", 9, $event.key, "Tab")
+        ) && 
+        $event.shiftKey 
+      ) {
+        return this.onKeyShiftTab($event);
+      }
+
+      // Tab 按键
+      if (
+        !(
+          !$event.type.indexOf("key") &&
+          this._k($event.keyCode, "tab", 9, $event.key, "Tab")
+        )
+      ) {
+        return this.onKeyTab($event);
+      }
+
+    },
+    /**
+     * enter 事件按下并且 添加新纪录 连续添加任务
+     */
+    onKeydownEnter() {
       const input = this.$refs.input;
       const value = input.value;
       if (!value.trim()) return;
@@ -233,6 +264,29 @@ const Input = {
       this.$parent.$nextTick(() => {
         this.$parent.addCacheTask(this.barInfo._parent);
       });
+    },
+    /**
+     * Tab 和 Shift 组合键 按下
+     */
+    onKeyShiftTab($event) { 
+      $event.preventDefault();
+
+      // 处在任务添加状态排除
+      if (this.$parent.cacheRow) return;
+
+      this.$parent.moveLeftTask(this.barInfo);
+    },
+    /**
+     * tab按键按下
+     */
+    onKeyTab($event) {
+      $event.preventDefault();
+
+      // 处在任务添加状态排除
+      if (this.$parent.cacheRow) return;
+      
+      // 开始向右侧移动
+      this.$parent.moveRightTask(this.barInfo);
     }
   },
   mounted() {
@@ -251,7 +305,7 @@ const Input = {
         },
         on: {
           blur: this.onBlur,
-          keydown: this.onKeydownEnter,
+          keydown: this.keydown,
         },
         ref: 'input',
       }
@@ -452,6 +506,66 @@ export default {
       if (!barInfo._parent) return;
       this.addCacheTask(barInfo._parent);
       this.cacheRow._depth = barInfo._depth;
+    },
+    /**
+     * 向右侧移动任务
+     * barInfo 任务信息
+     */
+    moveRightTask(barInfo) {
+      // 必须有上一个兄弟节点
+      let index = barInfo._index;
+      if (index <= 0) return;
+
+      // 获取坐标与父级
+      const parent = barInfo._parent;
+
+      // 获取所有兄弟任务
+      let children;
+      if (parent) {
+        children = parent.children || [];
+      } else {
+        children = this.$parent.dataList;
+      } 
+
+      // 获取上一个兄弟任务
+      let preSibTask = children[index - 1];
+      children.splice(index, 1);
+
+      if (!preSibTask.children)
+        preSibTask.children = [];
+
+      // 删除原先位置 挪动到新的位子上去
+      preSibTask.children.push(barInfo.task);
+      this.$parent.barList = this.$parent.getBarList();
+    },
+    /**
+     * 向左侧移动任务
+     * barInfo 任务信息
+     */
+    moveLeftTask(barInfo) {
+      // 最左侧元素不进行位移
+      let depth = barInfo._depth;
+      if (depth <= 0) return;
+
+      // 获取父级及爷爷级别的节点
+      const parent = barInfo._parent;
+      if (!parent) return;
+      const ancestor = parent._parent;
+
+      // 获取兄弟节点和父级兄弟节点
+      let sibList = parent.children;
+      let parentChildren;
+      if (ancestor) {
+        parentChildren = ancestor.children;
+      } else {
+        parentChildren = this.$parent.dataList;
+      }
+     
+      // 开始移动移动元素
+      let index = barInfo._index;
+      sibList.splice(index, 1);
+      parentChildren.push(barInfo.task);
+      this.$parent.barList = this.$parent.getBarList();
     },
     getIndent(depth) {
       return this.indent * depth;

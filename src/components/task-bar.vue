@@ -34,7 +34,7 @@
           :width="width + 1" 
           :height="height + 1" 
           :viewBox="`0 0 ${width + 1} ${height + 1}`">
-          <path fill="#FD998F" stroke="#F96B5D" :d="`
+          <path :fill="themeColor[0]" :stroke="themeColor[1]" :d="`
               M${width - 2},0.5
               l-${width - 5},0
               c-0.41421,0 -0.78921,0.16789 -1.06066,0.43934
@@ -66,6 +66,7 @@
 </template>
 <script>
 import Hammer from 'hammerjs';
+import dayjs from 'dayjs';
 
 export default {
   name: 'task-bar',
@@ -130,6 +131,18 @@ export default {
       }
     }
   },
+  computed: {
+    /**
+     * 获取颜色
+     */
+    themeColor() {
+      if (this.translateX + this.width >= dayjs().valueOf() / this.$parent.pxUnitAmp) {
+        return ['#95DDFF', '#64C7FE'];
+      }
+
+      return ['#FD998F', '#F96B5D'];
+    }
+  },
   methods: {
     /**
      * 初始化箭头拖拽功能
@@ -180,7 +193,7 @@ export default {
       this.destroyGestureBar = () => {
         barHam.destroy();
       }
-    }
+    },
   },
   beforeDestroy() {
     this.destroyGestureBar();
@@ -188,7 +201,7 @@ export default {
   },
   mounted() {
     this.initGestureBar();
-  }
+  },
 }
 </script>
 <style>

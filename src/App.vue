@@ -1,6 +1,8 @@
 <template>
   <div style="width:100%;height:100vh;display:flex;flex-flow:column;overflow:hidden;">
-    <tsGantt 
+    <tsGantt
+      :data="data"
+      :columns="columns" 
       @onTaskCreate="onTaskCreate"
       @onTaskChangeContent="onTaskChangeContent"
       @onTaskDelete="onTaskDelete"
@@ -21,73 +23,137 @@ import TsGantt from "@/components";
  * onRowChangeName  // 任务修改
  */
 
+const dataList = [
+  {
+    executor: null,
+    content: '绘制表盘设计逻辑',
+    startDate: '2020-07-01 08:02:02',
+    endDate: '2020-07-02',
+    collapsed: false,
+    children: [],
+  },
+  {
+    executor: null,
+    content: '甘特图实现',
+    startDate: '2016-12-01',
+    endDate: '2016-12-31', 
+    collapsed: false,
+    children: [
+      {
+        executor: null,
+        content: '绘制表盘设计逻辑',
+        startDate: '2020-07-01 08:02:02',
+        endDate: '2020-07-02',
+        collapsed: false,
+        children: [],
+      },
+      {
+        executor: null,
+        content: '绘制表盘设计逻辑2',
+        startDate: '2020-07-01 08:02:02',
+        endDate: '2020-07-02',
+        collapsed: false,
+        children: [
+          {
+            executor: null,
+            content: '甘特图实现2',
+            startDate: null,
+            endDate: null, 
+            collapsed: false,
+          },
+          {
+            executor: null,
+            content: '阅读喜欢的书📚',
+            startDate: '2020-08-18',
+            endDate: '2020-08-19', 
+            collapsed: false,
+          },
+        ]
+      },
+    ],
+  },
+  {
+    executor: null,
+    content: '甘特图实现2',
+    startDate: null,
+    endDate: null, 
+    collapsed: false,
+    children: [],
+  },
+  {
+    executor: null,
+    content: '阅读喜欢的书📚',
+    startDate: '2020-08-18',
+    endDate: '2020-08-19', 
+    collapsed: false,
+    children: [],
+  },
+  {
+    executor: null,
+    content: '三体',
+    startDate: '2020-08-20',
+    endDate: '2020-08-25', 
+    collapsed: false,
+    children: [],
+  },
+  {
+    executor: null,
+    content: '预订纪念日餐厅',
+    startDate: '2020-07-01',
+    endDate: '2020-09-06', 
+    collapsed: false,
+    children: [],
+  },
+  {
+    executor: null,
+    content: '绘制表盘设计逻辑"',
+    startDate: '2020-08-20',
+    endDate: '2020-09-06', 
+    collapsed: false,
+    children: [],
+  },
+];
+
+const columns = [
+  {
+    width: 260,
+    minWidth: 210,
+    name: 'content',
+    visible: true,
+    keepVisible: true,
+    sortable: true,
+  },
+  {
+    width: 100,
+    minWidth: 52,
+    name: 'executor',
+    visible: true,
+    keepVisible: false,
+    sortable: true,
+  },
+  {
+    width: 120,
+    minWidth: 70,
+    name: 'endDate',
+    visible: true,
+    keepVisible: false,
+    sortable: true,
+  },
+  {
+    width: 100,
+    minWidth: 70,
+    name: 'fs',
+    visible: true,
+    keepVisible: false,
+    sortable: false,
+  },
+];
 export default {
   name: "app",
   data() {
     return {
-      data: [
-        {
-          id: "1",
-          pid: "0",
-          name: "旅行",
-          startDate: "2019-09-07",
-          realStartDate: "2019-09-10",
-          endDate: "2019-10-31",
-          realEndDate: "2019-10-19",
-          children: [
-            {
-              id: "1-1",
-              pid: "1",
-              name: "云台之间",
-              startDate: "2019-09-10",
-              endDate: "2019-09-13",
-              children: [
-                {
-                  id: "1-1-1",
-                  pid: "1-1",
-                  name: "日落云巅",
-                  startDate: "2019-09-10",
-                  endDate: "2019-09-13"
-                }
-              ]
-            },
-            {
-              id: "1-2",
-              pid: "1",
-              name: "天空之镜",
-              startDate: "2019-09-17",
-              endDate: "2019-09-22"
-            },
-            {
-              id: "1-3",
-              name: "蓬莱之岛",
-              pid: "1",
-              startDate: "2019-09-25",
-              endDate: "2019-09-30"
-            },
-            {
-              id: "1-4",
-              pid: "1",
-              name: "西塘之南",
-              startDate: "2019-10-03",
-              endDate: "2019-10-07"
-            },
-            {
-              pid: "1",
-              id: "1-5",
-              name: "凤凰之缘",
-              startDate: "2019-10-11",
-              endDate: "2019-10-19"
-            }
-          ]
-        },
-        {
-          id: "2",
-          name: "租房子",
-          startDate: "2019-09-20",
-          endDate: "2019-10-31"
-        }
-      ], // 数据
+      data: dataList,
+      columns,
     };
   },
   methods: {
@@ -99,6 +165,12 @@ export default {
     onTaskCreate(parent, task) {
       console.log(parent, task, 'onTaskCreate>>>>>>>>>>>>');
     },
+    /**
+     * 任务修改
+     * task: 任务数据
+     * content: 修改的内容
+     * oldContent: 
+     */
     onTaskChangeContent(task, content, oldContent) {
       console.log(parent, content, oldContent, 'onTaskChangeContent>>>>>>>>>');
     },

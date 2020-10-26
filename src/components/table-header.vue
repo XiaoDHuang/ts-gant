@@ -128,7 +128,9 @@
       }
     },
     data() {
-      return {};
+      return {
+        hovered: '',
+      };
     },
     methods: {
       onAllRowOpen() {
@@ -136,7 +138,7 @@
       },
       handleMouseOver(column, isOver) {
         const type = isOver ? 'mouseOver' : 'mouseLeave';
-        this.layGesture(type, column)
+        this.layGesture(type, column);
       },
       dispatchGesture(type, event) {
         this.layGesture(type, event);

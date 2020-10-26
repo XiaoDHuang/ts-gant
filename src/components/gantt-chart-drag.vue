@@ -59,6 +59,7 @@
             :style="`display: none; height: 28px; top: ${selectionIndicatorTop}px;`"
           ></div>
           <table-body
+            ref="tableBody"
             :showSelectionIndicator="showSelectionIndicator"
             :selectionIndicatorTop="selectionIndicatorTop"
             :table-width="tableWidth" 
@@ -66,7 +67,6 @@
             :dataList="barList" 
             :columns="columns"
             :layGesture="layGesture"
-            @onMouseLeave="showSelectionIndicator = false"
             @mousemove="deOnMouseMove"
             @onRowOpen="onRowOpen"
           ></table-body>
@@ -153,7 +153,11 @@
             </div>
           </div>
         </main>
-        <divider-split @showTable="showTable" :left="tableWidth"></divider-split>
+        <divider-split 
+          @showTable="showTable"
+          :layIsHandleOver="layIsHandleOver"
+          :left="tableWidth"
+        ></divider-split>
         <time-indicator
           :guestureGrantBodyMove="guestureGrantBodyMove"
           :viewTranslateX="translateX"
@@ -185,7 +189,7 @@ import advancedFormat from "dayjs/plugin/advancedFormat";
 import isLeapYear from "dayjs/plugin/isLeapYear";
 import weekday from 'dayjs/plugin/weekday';
 
-import { flattenDeep } from '../util/array';
+import { flattenDeep, dfsCloneNode } from '../util/array';
 import { addResizeListener } from '../util/resize-event';
 // import weekday from 'dayjs/plugin/weekday';
 import TaskBar from './task-bar';
@@ -244,9 +248,7 @@ const columns = [
   {
     width: 214,
     minWidth: 210,
-    payload: {
-      name: "content",
-    },
+    name: 'content',
     visible: true,
     keepVisible: true,
     sortable: true,
@@ -254,9 +256,7 @@ const columns = [
   {
     width: 100,
     minWidth: 52,
-    payload: {
-      name: "executor",
-    },
+    name: 'executor',
     visible: true,
     keepVisible: false,
     sortable: true,
@@ -264,10 +264,7 @@ const columns = [
   {
     width: 120,
     minWidth: 70,
-    payload: {
-      name: "dueDate",
-      key: "end",
-    },
+    name: 'endDate',
     visible: true,
     keepVisible: false,
     sortable: true,
@@ -275,10 +272,7 @@ const columns = [
   {
     width: 100,
     minWidth: 70,
-    payload: {
-      name: "leadDependency",
-      key: "fs",
-    },
+    name: 'fs',
     visible: true,
     keepVisible: false,
     sortable: false,
@@ -430,16 +424,6 @@ const layout = {
       layGesture: () => {}
     }
   },
-  watch: {
-    columns: {
-      handler(val) {
-        val.forEach(item => {
-          item._isHandleOver = false;
-        });
-      },
-      immediate: true,
-    }
-  },
   methods: {
     layUpdate() {
       this.tableWidth = this.columns.reduce((width, item) => width+ item.width, 0);
@@ -456,6 +440,8 @@ const layout = {
         this.viewWidth = 200;
         this.tableWidth = this.gantW - this.viewWidth;
       }
+
+      this.$forceUpdate()
     },
     showTable() {
       if (this.tableWidth > 0) {
@@ -466,7 +452,6 @@ const layout = {
 
       this.viewWidth = this.gantW - this.tableWidth;
     },
-    
   },
   mounted() {
     addResizeListener(this.$refs.gantAppView, () => {
@@ -516,6 +501,9 @@ const layout = {
       const mouseOver = (item) => {
         column = item;
         column._isHandleOver = true;
+        this.layIsHandleOver = true;
+        this.$refs.tableHeader.$forceUpdate();
+        this.$refs.tableBody.$forceUpdate();
       }
 
       // 手指抬起
@@ -523,7 +511,10 @@ const layout = {
         if (isPress) return; 
 
         column._isHandleOver = false;
+        this.layIsHandleOver = false;
         column = null;
+        this.$refs.tableHeader.$forceUpdate();
+        this.$refs.tableBody.$forceUpdate();
       }
 
       // 开始滑动
@@ -537,6 +528,7 @@ const layout = {
         if (!isPress) return;
 
         column._isHandleOver = true;
+        this.layIsHandleOver = true;
         startWidth = column.width;
         update(event);
       }
@@ -557,7 +549,11 @@ const layout = {
         update(event);
         isPress = false;
         column._isHandleOver = false;
+        this.layIsHandleOver = false;
         column = null;
+        
+        this.$refs.tableHeader.$forceUpdate();
+        this.$refs.tableBody.$forceUpdate();
       }
 
       const map = {
@@ -627,7 +623,7 @@ export default {
       type: Number,
       default: 418,
     },
-    dataList: {
+    data: {
       type: Array,
       default() {
         return dataList;
@@ -642,10 +638,10 @@ export default {
     const viewTypeObj = viewTypeList[0];
     const translateX = dayjs(startDate).valueOf() / (viewTypeObj.value * 1000);
     const gantW = this.width; 
-    const gantH = this.height; 
+    const gantH = this.height;
     const viewWidth = 704;
     const tableWidth = 616;
-    const collapsed = this.dataList.every(bar => bar.collapsed);
+    const collapsed = this.data.every(bar => bar.collapsed);
 
     return {
       gantW,
@@ -673,6 +669,7 @@ export default {
       isShadowGesturePress: false,
 
       guestureGrantBodyMove: false,
+      dataList: dfsCloneNode(this.data),
       // 数据部分
       barList: [],
       collapsed,
@@ -1504,6 +1501,15 @@ export default {
     },
   },
   watch: {
+    data: {
+      handler(val) {
+        this.dataList = dfsCloneNode(val)
+      },
+      deep: true,
+    },
+    dataList() {
+      this.barList = this.getBarList();
+    },
     viewTypeObj() {
       this.translateX = dayjs(startDate).valueOf() / (this.viewTypeObj.value * 1000);
       this.barList = this.getBarList();

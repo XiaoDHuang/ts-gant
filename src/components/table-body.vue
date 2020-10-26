@@ -440,6 +440,7 @@ export default {
       
       // 如果值不为空
       if (value) {
+        this.$parent.$emit('onTaskCreate', (parent ? {...parent} : null), {...task});
         return;
       }
 
@@ -449,6 +450,7 @@ export default {
         parent.children.splice(this.cacheIdx, 1);
       }
 
+
       this.$parent.barList = this.$parent.getBarList();
     },
     /**
@@ -456,10 +458,15 @@ export default {
      */
     completeEdit(barInfo, value) {
       const task = barInfo.task;
+      const label = barInfo.label;
       barInfo.label = value;
       task.content = value;
       task._canEdit = false;
       task._cacheData = false;
+
+      if (label !== value) {
+        this.$parent.$emit('onTaskChangeContent', { ...task }, value, label);
+      }
     },
     /**
      * 完成任务添加编辑操作
@@ -496,7 +503,10 @@ export default {
       } else {
         this.$parent.dataList.splice(index, 1);
       }
+
       this.$parent.barList = this.$parent.getBarList();
+      this.$parent.$emit('onTaskDelete', { ... barInfo.task });
+
       closeFn && closeFn();
     },
     /**
@@ -537,6 +547,7 @@ export default {
       // 删除原先位置 挪动到新的位子上去
       preSibTask.children.push(barInfo.task);
       this.$parent.barList = this.$parent.getBarList();
+      this.$parent.$emit('onTaskIndent', preSibTask ? {...preSibTask} : null, {...barInfo.task});
     },
     /**
      * 向左侧移动任务
@@ -566,6 +577,7 @@ export default {
       sibList.splice(index, 1);
       parentChildren.push(barInfo.task);
       this.$parent.barList = this.$parent.getBarList();
+      this.$parent.$emit('onTaskIndent', ancestor ? {...ancestor} : null, {...barInfo.task});
     },
     getIndent(depth) {
       return this.indent * depth;

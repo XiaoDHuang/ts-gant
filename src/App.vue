@@ -1,6 +1,11 @@
 <template>
   <div style="width:100%;height:100vh;display:flex;flex-flow:column;overflow:hidden;">
-    <tsGantt></tsGantt>
+    <tsGantt 
+      @onTaskCreate="onTaskCreate"
+      @onTaskChangeContent="onTaskChangeContent"
+      @onTaskDelete="onTaskDelete"
+      @onTaskIndent="onTaskIndent"
+    ></tsGantt>
   </div>
 </template>
 
@@ -83,61 +88,34 @@ export default {
           endDate: "2019-10-31"
         }
       ], // 数据
-      selected: [], // 选中数据
-      contextMenuOptions: [
-        { label: "任务名称", prop: "name" },
-        { label: "开始时间", prop: "startDate" },
-        { label: "结束时间", prop: "endDate" }
-      ]
     };
   },
   methods: {
     /**
-     * 时间发生更改
-     * row: Object 当前行数据c
+     * 创建任务 
+     * parent: 父任务
+     * task: 当前任务
      */
-    timeChange(row) {
-      console.log("时间修改:", row);
+    onTaskCreate(parent, task) {
+      console.log(parent, task, 'onTaskCreate>>>>>>>>>>>>');
     },
-    //
+    onTaskChangeContent(task, content, oldContent) {
+      console.log(parent, content, oldContent, 'onTaskChangeContent>>>>>>>>>');
+    },
     /**
-     * 前置任务发生更改
-     * row: Object 当前行数据
-     * oldval: [String, Array] 前置修改前的旧数据
-     * handle: Boolean 是否用户编辑产生的改变
+     * 删除任务
+     * task 删除当前任务
      */
-    preChange(row, oldval, handle) {
-      console.log("前置修改:", row, oldval, handle);
+    onTaskDelete(task) {
+      console.log(task, 'onTaskDelete >>>>>>>>>>>>>>>>>');
     },
-    // 数表展开行
-    expandChange(row, expanded) {
-      console.log("展开行:", row, expanded);
-    },
-    // 多选选择
-    selectionChange(val) {
-      console.log("多选：", val);
-    },
-    // 删除任务
-    taskRemove(item) {
-      console.log("删除任务：", item);
-    },
-    // 添加任务
-    taskAdd(item) {
-      console.log("添加任务：", item);
-    },
-    // 懒加载
-    lazyLoad(tree, treeNode, resolve) {
-      setTimeout(() => {
-        resolve([
-          {
-            id: "1-1-1",
-            pid: tree.id,
-            name: "日落云巅",
-            startDate: "2019-09-10",
-            endDate: "2019-09-13"
-          }
-        ]);
-      }, 1000);
+    /**
+     * 任务左右移动
+     * parent 父级任务
+     * task 当前任务
+     */
+    onTaskIndent(parent, task) {
+      console.log(parent, task, 'onTaskIndent>>>>>>>>>>>>');
     }
   },
   components: {

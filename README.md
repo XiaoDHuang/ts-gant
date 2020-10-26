@@ -69,7 +69,7 @@
   | 1 | onTaskCreate | 创建任务 | function(parent, task) 依次为任务数据与父级任务数据 |
   | 3 | onTaskDelete | 删除任务 | function(task)  依次为当前任务行数据 |
   | 4 | onTaskIndent | 任务左右移动切换父子任务 |  function(parent, task) 依次为左右移动的父任务、与移动当前任务 |
-  | 5 | onTaskChangeContent | 任务内容发生变更 |  function(task, content) 依次为当前行数据 |
+  | 5 | onTaskChangeContent | 任务内容发生变更 |  function(task, content, oldContent) 依次为当前行数据 |
   | 6 | onTaskTimeChange | 任务时间变更(时间dayjs类型) |  function(task, startDate, endDate) 依次为当前行数据 |
 
 ### Methods 方法

@@ -35,7 +35,42 @@
 
 ## 文档
 ###  Attributes 参数
-### props 配置项
+| 序号 | 参数 | 说明 | 类型 | 可选值 | 默认值 | 注意 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| 1 | data | 数据 | Task[] | - | [] | - |
+| 2 | columns | 表格列字段数据 | Column[] | 任务标题、执行者、截止时间、前置依赖 | 不传 | - |
+| ... | 其他控制字段(待开发) | 控制排序，是否可编辑等 | ... | - | - | - | 
+
+### 数据类型定义要包含字段
+#### Task 配置项
+| 序号 | 参数 | 说明 | 类型 | 默认值 |
+| ---- | ---- | ---- | ---- | ---- |
+| 1 | children | 数据的子集children字段,表示为树表 [必须字段]| Task[] | [] |
+| 2 | content  | 任务描述的内容，任务标题列[必须字段] | string | - | 
+| 3 | executor | 执行人[必须字段] | String | - |
+| 4 | startDate | 开始时间[必须字段] | 标准日期即可 string或Date | - | 
+| 5 | endDate | 截止日期[必须字段] | 标准日期即可 string或Date | - | 
+| 6 | collapsed | 是否折叠子任务 | boolean | false | 
+| 7 | color | 外部可根据状态定义条状图颜色 | #XXXX | - |
+| 7 | [x : tring ]: any | 其他扩展字段用户自定义 | any | - |  
+
+#### Column 配置项
+| 序号 | 参数 | 说明 | 类型 | 默认值 |
+| ---- | ---- | ---- | ---- | ---- |
+| 1 | width | 列的宽度配置 | number | - |
+| 2 | minWidth | 列最小宽度 | number | - |
+| 3 | name | - | 列的字段名称 | string |
+| 4 | visible | 是否隐藏列（暂未支持） | - | - |
+| 5 | sortable | 是否可排序（暂未支持）| - | - |
+
 ### Events 事件
+  | 序号 | 事件名 | 说明 | 回调参数 |
+  | ---- | ---- | ---- | ---- |
+  | 1 | onTaskCreate | 创建任务 | function(parent, task) 依次为任务数据与父级任务数据 |
+  | 3 | onTaskDelete | 删除任务 | function(task)  依次为当前任务行数据 |
+  | 4 | onTaskIndent | 任务左右移动切换父子任务 |  function(parent, task) 依次为左右移动的父任务、与移动当前任务 |
+  | 5 | onTaskChangeContent | 任务内容发生变更 |  function(task, content) 依次为当前行数据 |
+  | 6 | onTaskTimeChange | 任务时间变更(时间dayjs类型) |  function(task, startDate, endDate) 依次为当前行数据 |
+
 ### Methods 方法
 ### 版本记录

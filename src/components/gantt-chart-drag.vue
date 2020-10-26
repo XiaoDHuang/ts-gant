@@ -1090,7 +1090,8 @@ export default {
         setBarShadowPosition(event)
       };
 
-      const panEnd = () => {
+      const panEnd = (event) => {
+        setBarShadowPosition(event);
         this.isPointerPress = false;
         this.showDragToolShadow = false;
 
@@ -1100,6 +1101,8 @@ export default {
         this.shadowGestBarLeft = 0;
         this.shadowGestBarRight = 0;
         barInfo.stepGesture = 'end';
+
+        this.updateTaskDate(barInfo);
       }
 
       this.chartHammer.on('panstart', panStart);
@@ -1165,7 +1168,8 @@ export default {
         setBarShadowPosition(event);
       }
 
-      const panEnd = () => {
+      const panEnd = (event) => {
+        setBarShadowPosition(event);
         this.showDragToolShadow = false;
         this.chartHammer.off('panstart', panStart);
         this.chartHammer.off('panmove', panMove);
@@ -1173,6 +1177,8 @@ export default {
         this.shadowGestBarLeft = 0;
         this.shadowGestBarRight = 0;
         barInfo.stepGesture = 'end';
+
+        this.updateTaskDate(barInfo);
       }
       
       this.chartHammer.on('panstart', panStart);
@@ -1182,6 +1188,19 @@ export default {
     shadowGestureBarPressup(event, barInfo) {
       this.gestureKeyPress = false;
       barInfo.stepGesture = 'end';
+    },
+    /**
+     * 更新时间
+     */
+    updateTaskDate(barInfo) {
+      const translateX = barInfo.translateX;
+      const width = barInfo.width;
+      const task = barInfo.task;
+
+      task.startDate = dayjs(translateX * this.pxUnitAmp);
+      task.endDate = dayjs((translateX + width) * this.pxUnitAmp);
+
+      this.$emit('onTaskTimeChange', task, task.startDate, task.endDate);
     },
     /**
      * 计算位置

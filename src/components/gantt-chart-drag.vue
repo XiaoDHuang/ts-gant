@@ -888,19 +888,32 @@ export default {
         const startDate = dayjs(startX * this.pxUnitAmp);
 
         const getDayStep = () => {
-          let endDate = startDate.startOf('day');
-          if ((isLeft && isShrink) || (!isLeft && !isShrink)) {
-            endDate = endDate.endOf('day');
+           let endDate = startDate.endOf('day');
+
+          // 左侧收缩
+          if (isShrink && isLeft) {
+            endDate = startDate.add(1, 'day').startOf('day');
+          }
+
+          // 右侧扩展
+          if (!isShrink && isLeft) {
+            endDate = startDate.startOf('day');
+          }
+
+          // 右侧收缩
+          if (isShrink && !isLeft) {
+            endDate = startDate.add(-1, 'day').endOf('day')
           }
 
           let step = 24 * 60 * 60 * 1000 / this.pxUnitAmp;
-          let diff = Math.abs(endDate.valueOf() / this.pxUnitAmp - startX)
+          let diff = Math.abs((endDate.valueOf() - startDate.valueOf()) / this.pxUnitAmp)
           if (diff > space) {
             step = diff;
           }
 
           return step;
         }
+
         const getWeekStep = () => {
           let endDate = startDate.weekday(1).hour(0).minute(0).second(0);
           if ((isLeft && isShrink) || (!isLeft && !isShrink)) {
@@ -915,6 +928,9 @@ export default {
 
           return step;
         }
+
+
+       
         const getMonthStep = () => {
           let month = -1;
           let endDate2 = startDate.startOf('month');

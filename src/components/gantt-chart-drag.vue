@@ -1,180 +1,182 @@
 <template>
-  <div class="gantt-app-view" ref="gantAppView">
-    <svg-symbol></svg-symbol>
-    <div class="container__1PWP" style="box-sizing: content-box;">
-      <div 
-        ref="ganttBody" 
-        id="gantt-body" 
-        class="body__3LBc gantt__3Xim"
-        :width="gantW" 
-        :height="gantH">
+  <div style="width:100%;height:100%;min-heihgt:60px;display:flex;flex-flow:column;overflow:hidden;">
+    <div class="gantt-app-view" ref="gantAppView">
+      <svg-symbol></svg-symbol>
+      <div class="container__1PWP" style="box-sizing: content-box;">
         <div 
-          :class="{ scrolling__1B1k: guestureGrantBodyMove }" 
-          class="scroll-indicator__3aij" style="left: -8px; width: 8px;">
-        </div>
-        <header>
-          <table-header
-            ref="tableHeader"
-            :collapsed="collapsed"
-            :width="tableWidth"
-            :columns="columns"
-            :layGesture="layGesture"
-            @onAllRowOpen="onAllRowOpen"
-          ></table-header>
+          ref="ganttBody" 
+          id="gantt-body" 
+          class="body__3LBc gantt__3Xim"
+          :width="gantW" 
+          :height="gantH">
           <div 
-            ref="timeAxisRender" 
-            @wheel.prevent="wheel" 
-            class="time-axis__3meF" 
-            :style="`left: ${tableWidth}px; width: ${viewWidth}px;`"
-          >
-            <div  class="render-chunk__28qu" :style="`transform: translateX(-${translateX}px;`">
-              <div 
-                v-for="(item, key) in getMajorList()" 
-                :key="key" 
-                class="major__2rd6" 
-                :style="`width: ${item.width}px; left: ${item.left}px;`"
-              >
-                <div class="label__RLd1">{{item.label}}</div>
-              </div>
-              <div
-                v-for="(dayItem) in getMinorList()"
-                class="minor__11Xd" 
-                :class="{
-                  weekends__1EmY: dayItem.isWeek, 
-                  highlight__3NdW: dayItem.isHighlight && viewTypeObj.key === 'day'
-                }"
-                :key="dayItem.key"
-                :style="`width: ${dayItem.width}px; left:${dayItem.left}px;`"
-               >
-                <div class="label__RLd1">{{ dayItem.label }}</div>
-                <div v-if="dayItem.isHighlight && viewTypeObj.key === 'day'" class="highlight-bg__1mPp"></div>
-              </div>
-            </div>
+            :class="{ scrolling__1B1k: guestureGrantBodyMove }" 
+            class="scroll-indicator__3aij" style="left: -8px; width: 8px;">
           </div>
-        </header>
-        <main ref="gantMainEl">
-          <div
-            class="selection-indicator__3rr6" 
-            v-show="showSelectionIndicator" 
-            :style="`display: none; height: 28px; top: ${selectionIndicatorTop}px;`"
-          ></div>
-          <table-body
-            ref="tableBody"
-            :showSelectionIndicator="showSelectionIndicator"
-            :selectionIndicatorTop="selectionIndicatorTop"
-            :table-width="tableWidth" 
-            :table-height="svgViewH"
-            :dataList="barList" 
-            :columns="columns"
-            :layGesture="layGesture"
-            @mousemove="deOnMouseMove"
-            @onRowOpen="onRowOpen"
-          ></table-body>
-          <div
-            ref="chartView"
-            @wheel.prevent="wheel"
-            @mouseup="shadowGesturePressup"
-            @mousemove="deOnMouseMove"
-            @mouseleave="showSelectionIndicator = false"
-            class="chart__3nGi" 
-            :style="`left:${tableWidth}px;height:${svgViewH}px;width:${viewWidth}px;`"
-          >
-            <svg class="chart-svg-renderer__7ors"
-              xmlns="http://www.w3.org/2000/svg" 
-              version="1.1" 
-              :width="viewWidth" 
-              :height="svgViewH" 
-              :viewBox="`${translateX} 0 ${viewWidth} ${svgViewH}`"
+          <header>
+            <table-header
+              ref="tableHeader"
+              :collapsed="collapsed"
+              :width="tableWidth"
+              :columns="columns"
+              :layGesture="layGesture"
+              @onAllRowOpen="onAllRowOpen"
+            ></table-header>
+            <div 
+              ref="timeAxisRender" 
+              @wheel.prevent="wheel" 
+              class="time-axis__3meF" 
+              :style="`left: ${tableWidth}px; width: ${viewWidth}px;`"
             >
-              <template v-for="(item) in getMinorList()">
-                <g v-if="item.isWeek" :key="item.key" stroke="#f0f0f0">
-                  <path :d="`M${item.left}.5,0 L${item.left},${svgViewH}`"></path>
-                  <rect fill="#F7F7F7" opacity="0.5" stroke-width="0" :x="item.left" y="0" :width="item.width" :height="svgViewH"></rect>
-                  <rect v-if="item.isHighlight" fill="#FFA941" opacity="0.3" stroke-width="0" :x="item.highlightX" y="0" :width="item.highlightW" :height="svgViewH"></rect>
-                </g>
-                <g v-else :key="item.key" stroke="#f0f0f0">
-                  <path :d="`M${item.left}.5,0 L${item.left},${svgViewH}`"></path>
-                  <rect v-if="item.isHighlight" fill="#FFA941" opacity="0.3" stroke-width="0" :x="item.highlightX" y="0" :width="item.highlightW" :height="svgViewH"></rect>
-                </g>
-              </template>
-              <g
-                v-if="showDragToolShadow" 
-                fill="rgba(204, 236, 255, 0.3)" 
-                stroke="#87D2FF"
-              >
-                <path v-show="shadowGestBarLeft" :d="`M${shadowGestBarLeft},0 L${shadowGestBarLeft},${svgViewH}`"></path>
-                <rect :x="dragToolShadowX" y="0" :width="dragToolShadowW" :height="svgViewH" stroke-width="0"></rect>
-                <path v-show="shadowGestBarRight" :d="`M${shadowGestBarRight},0 L${shadowGestBarRight},${svgViewH}`"></path>
-              </g>
-            </svg>
-            <div class="render-chunk__22Ez" :style="`height: ${svgViewH}px; transform:translateX(-${translateX}px;`">
-              <template v-for="(bar, index) in barList" >
-                <task-bar-thumb
-                  v-if="getshowTaskBar(bar.width, bar.translateX, translateX) && !bar.invalidDateRange"
-                  :key="index"
-                  :label="bar.label"
-                  :viewWidth="viewWidth"
-                  :viewTranslateX="translateX"
-                  :translateX="bar.translateX" 
-                  :translateY="bar.translateY"
-                  :width="bar.width"
-                  @timeTranslateLocation="locaTimeTranslate"
-                ></task-bar-thumb>
-                <task-bar
-                  v-else 
-                  :key="index"
-                  :label="bar.label"
-                  :width="bar.width"
-                  :translateX="bar.translateX" 
-                  :translateY="bar.translateY"
-                  :stepGesture="bar.stepGesture"
-                  :invalidDateRange="bar.invalidDateRange"
-                  :dateTextFormat="bar.dateTextFormat"
-                  :showDragBar="bar.getHovered(bar.translateY, selectionIndicatorTop)"
-                  @gesturePress="(event, type) => shadowGesturePress(event, type, bar)" 
-                  @gestureBarPress="(event) => shadowGestureBarPress(event, bar)" 
-                  @gestureBarPressup="(event) => shadowGestureBarPressup(event, bar)"
-                ></task-bar>
-              </template>
-              <template v-for="(bar, key) in barList.filter(item => item.invalidDateRange)">
-                <invalid-task-bar 
-                  :key="barList.length + key"
-                  :translateX="translateX"
-                  :top="bar.translateY"
-                  :left="bar.translateX"
-                  :startXRectBar="bar.startXRectBar"
-                  :dateTextFormat="bar.dateTextFormat"
-                  :setShadowShow="bar.setShadowShow"
-                  :setInvalidTaskBar="(left, width) => bar.setInvalidTaskBar(bar, left, width)"
-                  @gesturePress="(event, type) => shadowGesturePress(event, type, bar)" 
+              <div  class="render-chunk__28qu" :style="`transform: translateX(-${translateX}px;`">
+                <div 
+                  v-for="(item, key) in getMajorList()" 
+                  :key="key" 
+                  class="major__2rd6" 
+                  :style="`width: ${item.width}px; left: ${item.left}px;`"
                 >
-                </invalid-task-bar>
-              </template>
+                  <div class="label__RLd1">{{item.label}}</div>
+                </div>
+                <div
+                  v-for="(dayItem) in getMinorList()"
+                  class="minor__11Xd" 
+                  :class="{
+                    weekends__1EmY: dayItem.isWeek, 
+                    highlight__3NdW: dayItem.isHighlight && viewTypeObj.key === 'day'
+                  }"
+                  :key="dayItem.key"
+                  :style="`width: ${dayItem.width}px; left:${dayItem.left}px;`"
+                >
+                  <div class="label__RLd1">{{ dayItem.label }}</div>
+                  <div v-if="dayItem.isHighlight && viewTypeObj.key === 'day'" class="highlight-bg__1mPp"></div>
+                </div>
+              </div>
             </div>
-          </div>
-        </main>
-        <divider-split 
-          @showTable="showTable"
-          :layIsHandleOver="layIsHandleOver"
-          :left="tableWidth"
-        ></divider-split>
-        <time-indicator
-          :guestureGrantBodyMove="guestureGrantBodyMove"
-          :viewTranslateX="translateX"
-          :tableWidth="tableWidth"
-          :viewWidth="viewWidth"
-          :pxUnitAmp="pxUnitAmp"
-          @timeTranslateLocation="locaTimeTranslate"
-        ></time-indicator>
-        <time-axis-scale-select
-          v-model="viewTypeObj"
-          :guestureGrantBodyMove="guestureGrantBodyMove"
-          :viewWidth="viewWidth"
-          :view-type-list="viewTypeList" 
-          :defaultValue="viewTypeObj" 
-        ></time-axis-scale-select>
-      </div>
-    </div>  
+          </header>
+          <main ref="gantMainEl">
+            <div
+              class="selection-indicator__3rr6" 
+              v-show="showSelectionIndicator" 
+              :style="`display: none; height: 28px; top: ${selectionIndicatorTop}px;`"
+            ></div>
+            <table-body
+              ref="tableBody"
+              :showSelectionIndicator="showSelectionIndicator"
+              :selectionIndicatorTop="selectionIndicatorTop"
+              :table-width="tableWidth" 
+              :table-height="svgViewH"
+              :dataList="barList" 
+              :columns="columns"
+              :layGesture="layGesture"
+              @mousemove="deOnMouseMove"
+              @onRowOpen="onRowOpen"
+            ></table-body>
+            <div
+              ref="chartView"
+              @wheel.prevent="wheel"
+              @mouseup="shadowGesturePressup"
+              @mousemove="deOnMouseMove"
+              @mouseleave="showSelectionIndicator = false"
+              class="chart__3nGi" 
+              :style="`left:${tableWidth}px;height:${svgViewH}px;width:${viewWidth}px;`"
+            >
+              <svg class="chart-svg-renderer__7ors"
+                xmlns="http://www.w3.org/2000/svg" 
+                version="1.1" 
+                :width="viewWidth" 
+                :height="svgViewH" 
+                :viewBox="`${translateX} 0 ${viewWidth} ${svgViewH}`"
+              >
+                <template v-for="(item) in getMinorList()">
+                  <g v-if="item.isWeek" :key="item.key" stroke="#f0f0f0">
+                    <path :d="`M${item.left}.5,0 L${item.left},${svgViewH}`"></path>
+                    <rect fill="#F7F7F7" opacity="0.5" stroke-width="0" :x="item.left" y="0" :width="item.width" :height="svgViewH"></rect>
+                    <rect v-if="item.isHighlight" fill="#FFA941" opacity="0.3" stroke-width="0" :x="item.highlightX" y="0" :width="item.highlightW" :height="svgViewH"></rect>
+                  </g>
+                  <g v-else :key="item.key" stroke="#f0f0f0">
+                    <path :d="`M${item.left}.5,0 L${item.left},${svgViewH}`"></path>
+                    <rect v-if="item.isHighlight" fill="#FFA941" opacity="0.3" stroke-width="0" :x="item.highlightX" y="0" :width="item.highlightW" :height="svgViewH"></rect>
+                  </g>
+                </template>
+                <g
+                  v-if="showDragToolShadow" 
+                  fill="rgba(204, 236, 255, 0.3)" 
+                  stroke="#87D2FF"
+                >
+                  <path v-show="shadowGestBarLeft" :d="`M${shadowGestBarLeft},0 L${shadowGestBarLeft},${svgViewH}`"></path>
+                  <rect :x="dragToolShadowX" y="0" :width="dragToolShadowW" :height="svgViewH" stroke-width="0"></rect>
+                  <path v-show="shadowGestBarRight" :d="`M${shadowGestBarRight},0 L${shadowGestBarRight},${svgViewH}`"></path>
+                </g>
+              </svg>
+              <div class="render-chunk__22Ez" :style="`height: ${svgViewH}px; transform:translateX(-${translateX}px;`">
+                <template v-for="(bar, index) in barList" >
+                  <task-bar-thumb
+                    v-if="getshowTaskBar(bar.width, bar.translateX, translateX) && !bar.invalidDateRange"
+                    :key="index"
+                    :label="bar.label"
+                    :viewWidth="viewWidth"
+                    :viewTranslateX="translateX"
+                    :translateX="bar.translateX" 
+                    :translateY="bar.translateY"
+                    :width="bar.width"
+                    @timeTranslateLocation="locaTimeTranslate"
+                  ></task-bar-thumb>
+                  <task-bar
+                    v-else 
+                    :key="index"
+                    :label="bar.label"
+                    :width="bar.width"
+                    :translateX="bar.translateX" 
+                    :translateY="bar.translateY"
+                    :stepGesture="bar.stepGesture"
+                    :invalidDateRange="bar.invalidDateRange"
+                    :dateTextFormat="bar.dateTextFormat"
+                    :showDragBar="bar.getHovered(bar.translateY, selectionIndicatorTop)"
+                    @gesturePress="(event, type) => shadowGesturePress(event, type, bar)" 
+                    @gestureBarPress="(event) => shadowGestureBarPress(event, bar)" 
+                    @gestureBarPressup="(event) => shadowGestureBarPressup(event, bar)"
+                  ></task-bar>
+                </template>
+                <template v-for="(bar, key) in barList.filter(item => item.invalidDateRange)">
+                  <invalid-task-bar 
+                    :key="barList.length + key"
+                    :translateX="translateX"
+                    :top="bar.translateY"
+                    :left="bar.translateX"
+                    :startXRectBar="bar.startXRectBar"
+                    :dateTextFormat="bar.dateTextFormat"
+                    :setShadowShow="bar.setShadowShow"
+                    :setInvalidTaskBar="(left, width) => bar.setInvalidTaskBar(bar, left, width)"
+                    @gesturePress="(event, type) => shadowGesturePress(event, type, bar)" 
+                  >
+                  </invalid-task-bar>
+                </template>
+              </div>
+            </div>
+          </main>
+          <divider-split 
+            @showTable="showTable"
+            :layIsHandleOver="layIsHandleOver"
+            :left="tableWidth"
+          ></divider-split>
+          <time-indicator
+            :guestureGrantBodyMove="guestureGrantBodyMove"
+            :viewTranslateX="translateX"
+            :tableWidth="tableWidth"
+            :viewWidth="viewWidth"
+            :pxUnitAmp="pxUnitAmp"
+            @timeTranslateLocation="locaTimeTranslate"
+          ></time-indicator>
+          <time-axis-scale-select
+            v-model="viewTypeObj"
+            :guestureGrantBodyMove="guestureGrantBodyMove"
+            :viewWidth="viewWidth"
+            :view-type-list="viewTypeList" 
+            :defaultValue="viewTypeObj" 
+          ></time-axis-scale-select>
+        </div>
+      </div>  
+    </div>
   </div>
 </template>
 

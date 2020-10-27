@@ -1,5 +1,5 @@
 <template>
-  <div style="width:100%;height:100vh;display:flex;flex-flow:column;overflow:hidden;">
+  <div style="width:100%;height:100vh;">
     <tsGantt
       :data="data"
       :columns="columns" 
@@ -7,6 +7,7 @@
       @onTaskChangeContent="onTaskChangeContent"
       @onTaskDelete="onTaskDelete"
       @onTaskIndent="onTaskIndent"
+      @onTaskTimeChange="onTaskTimeChange"
     ></tsGantt>
   </div>
 </template>
@@ -28,7 +29,7 @@ const dataList = [
     executor: null,
     content: '绘制表盘设计逻辑',
     startDate: '2020-07-01 08:02:02',
-    endDate: '2020-07-02',
+    endDate: '2020-07-02 18:00:00',
     collapsed: false,
     children: [],
   },
@@ -43,7 +44,7 @@ const dataList = [
         executor: null,
         content: '绘制表盘设计逻辑',
         startDate: '2020-07-01 08:02:02',
-        endDate: '2020-07-02',
+        endDate: '2020-07-02 18:00:00',
         collapsed: false,
         children: [],
       },
@@ -91,8 +92,8 @@ const dataList = [
   {
     executor: null,
     content: '三体',
-    startDate: '2020-08-20',
-    endDate: '2020-08-25', 
+    startDate: '2020-10-18',
+    endDate: '2020-10-19', 
     collapsed: false,
     children: [],
   },
@@ -188,6 +189,9 @@ export default {
      */
     onTaskIndent(parent, task) {
       console.log(parent, task, 'onTaskIndent>>>>>>>>>>>>');
+    },
+    onTaskTimeChange(task, startDate, endDate) {
+      console.log(task, startDate, endDate, 'onTaskTimeChange>>>>>>>>>');
     }
   },
   components: {

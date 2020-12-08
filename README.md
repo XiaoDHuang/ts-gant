@@ -27,43 +27,44 @@
 > bryntum 唯一较美观的，但是可配置性差，无法和组件结合;不校验源数据正确性就报错、崩溃;规则死板不符合项目使用；收费年950$; 功能强大但文档只有简单介绍，详细用法只能控制台打印
   ![bryntum](http://wlsy.oss-cn-hangzhou.aliyuncs.com/bryntum.png)
 
-### 更新说明
-
-#### 事件列表
-
 ## 快速上手
 
+```bash
+npm run serve
+```
+
 ## 文档
+
 ###  Attributes 参数
 | 序号 | 参数 | 说明 | 类型 | 可选值 | 默认值 | 注意 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| 1 | data | 数据 | Task[] | - | [] | - |
-| 2 | columns | 表格列字段数据 | Column[] | 任务标题、执行者、截止时间、前置依赖 | 不传 | - | - |
+| 1 | data | 数据 | Task[] |  | [] |  |
+| 2 | columns | 表格列字段数据 | Column[] | 任务标题、执行者、截止时间、前置依赖 | 不传 |  |  |
 | 3 | viewType | 视图类型 | string | 支持日视图(day)、周视图(week)、月视图(month)、季视图(quarter)、年视图(halfYear) | day | TODO 待实现（增加该参数） |
-| 4 | translateDate | 甘特图时间偏移值 | 支持dayjs对象 或标准时间字符串、日期对象、或ms时间戳 | | 当前时间 | - | TODO 待增加该参数 |
-| ... | 其他控制字段(待开发) | 控制排序，是否可编辑等 | ... | - | - | - | 
+| 4 | translateDate | 甘特图时间偏移值 | 支持dayjs对象 或标准时间字符串、日期对象、或ms时间戳 | | 当前时间 |  | TODO 待增加该参数 | |
+| ... | 其他控制字段(待开发) | 控制排序，是否可编辑等 |  |  |  |  | 
 
 ### 数据类型定义要包含字段
 #### Task 配置项
 | 序号 | 参数 | 说明 | 类型 | 默认值 |
 | ---- | ---- | ---- | ---- | ---- |
 | 1 | children | 数据的子集children字段,表示为树表 [必须字段]| Task[] | [] |
-| 2 | content  | 任务描述的内容，任务标题列[必须字段] | string | - | 
-| 3 | executor | 执行人[必须字段] | String | - |
-| 4 | startDate | 开始时间[必须字段] | 标准日期即可 string或Date | - | 
-| 5 | endDate | 截止日期[必须字段] | 标准日期即可 string或Date | - | 
+| 2 | content  | 任务描述的内容，任务标题列[必须字段] | string |  | 
+| 3 | executor | 执行人[必须字段] | String |  |
+| 4 | startDate | 开始时间[必须字段] | 标准日期即可 string或Date |  | 
+| 5 | endDate | 截止日期[必须字段] | 标准日期即可 string或Date |  | 
 | 6 | collapsed | 是否折叠子任务 | boolean | false | 
-| 7 | color | 外部可根据状态定义条状图颜色 | #XXXX | - |
-| 7 | [x : tring ]: any | 其他扩展字段用户自定义 | any | - |  
+| 7 | color | 外部可根据状态定义条状图颜色 | string |  |
+| 7 | [x : tring ]: any | 其他扩展字段用户自定义 | any |  |  
 
 #### Column 配置项
 | 序号 | 参数 | 说明 | 类型 | 默认值 |
 | ---- | ---- | ---- | ---- | ---- |
-| 1 | width | 列的宽度配置 | number | - |
-| 2 | minWidth | 列最小宽度 | number | - |
-| 3 | name | - | 列的字段名称 | string |
-| 4 | visible | 是否隐藏列（暂未支持） | - | - |
-| 5 | sortable | 是否可排序（暂未支持）| - | - |
+| 1 | width | 列的宽度配置 | number |  |
+| 2 | minWidth | 列最小宽度 | number |  |
+| 3 | name |  列的字段名称 | string | |
+| 4 | visible | 是否隐藏列（暂未支持） | boolean |  |
+| 5 | sortable | 是否可排序（暂未支持）| boolean |  |
 
 ### Events 事件
   | 序号 | 事件名 | 说明 | 回调参数 |

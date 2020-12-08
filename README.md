@@ -71,6 +71,9 @@
   | 4 | onTaskIndent | 任务左右移动切换父子任务 |  function(parent, task) 依次为左右移动的父任务、与移动当前任务 |
   | 5 | onTaskChangeContent | 任务内容发生变更 |  function(task, content, oldContent) 依次为当前行数据 |
   | 6 | onTaskTimeChange | 任务时间变更(时间dayjs类型) |  function(task, startDate, endDate) 依次为当前行数据 |
+  | 7 | onToDetail | 进入详情 |  function(task) 当前行数据 |
+  | 8 | onDragSort | 拖拽排序 |  function(preParent, parentTask, preIndex, index, handleTask) 移动前后父级任务及位置 |
+
 
 ### Methods 方法
 ### 版本记录

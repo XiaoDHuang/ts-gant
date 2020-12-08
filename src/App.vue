@@ -8,6 +8,7 @@
       @onTaskDelete="onTaskDelete"
       @onTaskIndent="onTaskIndent"
       @onTaskTimeChange="onTaskTimeChange"
+      @onDragSort="onDragSort"
     ></tsGantt>
   </div>
 </template>
@@ -190,8 +191,17 @@ export default {
     onTaskIndent(parent, task) {
       console.log(parent, task, 'onTaskIndent>>>>>>>>>>>>');
     },
+    /**
+     * 时间发生变更
+     */
     onTaskTimeChange(task, startDate, endDate) {
       console.log(task, startDate, endDate, 'onTaskTimeChange>>>>>>>>>');
+    },
+    /**
+     * 任务层级上下拖拽逻辑
+     */
+    onDragSort(preParent, parentTask, preIndex, index, handleTask) {
+      console.log(preParent, parentTask, preIndex, index, handleTask, 'onDragSort>>>>>>');
     }
   },
   components: {

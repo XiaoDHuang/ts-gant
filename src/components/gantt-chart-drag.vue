@@ -10,8 +10,10 @@
           :width="gantW" 
           :height="gantH">
           <div 
+            class="scroll-indicator__3aij" 
             :class="{ scrolling__1B1k: guestureGrantBodyMove }" 
-            class="scroll-indicator__3aij" style="left: -8px; width: 8px;">
+            :style="`left: ${tableWidth - 8}px; width: 8px;`"
+          >
           </div>
           <header>
             <table-header
@@ -859,6 +861,7 @@ export default {
           _collapsed: item.collapsed,  // 是否折叠
           _depth: item._depth,  // 表示子节点深度
           _index: item._index,  // 任务下标位置
+          _flattenIndex: index, // 数据列表下标
           _parent, // 原任务数据
           _childrenCount: !item.children ? 0 : item.children.length, // 子任务
           _dateFormat,

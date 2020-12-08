@@ -1,10 +1,12 @@
 <template>
   <div
     class="scrollable__3FQe" 
-    @mousemove="event => $emit('mousemove', event)"
+    @mousemove="mousemove"
+    @mouseup="gesturePressup"
     :style="`width: ${tableWidth}px; height: ${tableHeight}px;`"
   > 
-    <div 
+    <div
+      ref="bodyView"
       class="body__38O5 view-compact__1L78"
       :style="`width: ${tableWidth}px ; height: ${tableHeight}px`"
     >
@@ -62,7 +64,13 @@
                 </div>
               </div>
               <div class="row-handle__210U">
-                <div class="body-row-handle__3YUe clickable__1NNN"><i></i></div>
+                <RowHandleWrap
+                  :barInfo="barInfo"
+                  @rowHandleClick="rowHandleClick"
+                  @gesturePress="gesturePress" 
+                >
+                  <i></i>
+                </RowHandleWrap>
               </div>
             </div>
             <div class="body-cell__OUd5 content">
@@ -177,10 +185,13 @@
           <div class="handle__cGEN right" data-role="handle"></div>
         </div>
       </div>
+      <div v-show="rowDataList[handleIndex]" class="mask__3CAH" @mousemove="gestureMove"></div>
+      <div v-if="rowDataList[handleIndex]" class="drag-indicator__1C3_" :style="`left: ${handleLeft}px; top: ${handleTop}px;`"></div>
     </div>
   </div>
 </template>
 <script>
+import Hammer from 'hammerjs';
 import TaskMenu from './task-menu';
 
 const indent = 38;
@@ -204,7 +215,7 @@ const Input = {
     },
     barInfo: {
       type: Object,
-      default: () => {}
+      default: () => ({})
     }
   },
   methods: {
@@ -311,10 +322,65 @@ const Input = {
   }
 };
 
+const RowHandleWrap = {
+  props: {
+    barInfo: {
+      type: Object,
+      default: () => ({})
+    }
+  },
+  methods: {
+    rowHandleClick(event) {
+      this.$emit('rowHandleClick', event, this.barInfo);
+    },
+    /**
+     * 初始化行拖拽事件
+     */
+    initGesture() {
+      const rowHandle = this.$refs.rowHandle;
+      const rowHandleHam = new Hammer(rowHandle);
+
+      const press = (event) => {
+        this.$emit('gesturePress', event, this.barInfo);
+      }
+
+      const pressup = (event) => {
+        this.$emit('gesturePressup', event, this.barInfo);
+      }
+
+      rowHandleHam.on('press', (event) => press(event));
+      rowHandleHam.on('pressup', (event) => pressup(event));
+
+      this.destroyGesture = () => {
+        rowHandleHam.destroy();
+      }
+    }
+  },
+  beforeDestroy() {
+    this.destroyGesture();
+  },
+  mounted() {
+    this.initGesture();
+  },
+  render(h) {
+    return h('div', 
+      {
+        staticClass: 'body-row-handle__3YUe clickable__1NNN',
+        ref: 'rowHandle',
+        on: {
+          click: this.rowHandleClick
+        }
+      },
+      this.$slots.default
+    )
+  }
+};
+
 export default {
   components: {
     Input,
     TaskMenu,
+    RowHandleWrap,
     // aDropdown,
     // TaskMenu,
     // elDropdown,
@@ -360,6 +426,12 @@ export default {
       indent,
       cacheIdx: -1,
       cacheRow: null,
+      handleIndex: -1, // 拖动条触发索引位置
+      targetHandleIndex: -1, // 拖动条移动后所处索引位置
+      handleTop: 0,   // 拖动条上下位置
+      handleLeft: 61, // 拖动条左右位置
+      handleNextIndex: -1, // 拖动条拖动后索引
+      handleNextIndent: 0, // 拖动条拖动后缩进值
     }
   },
   watch: {
@@ -592,7 +664,300 @@ export default {
     },
     dispatchGesture(type, event) {
       this.layGesture(type, event);
-    }
-  }
+    },
+
+    gesturePress(event, barInfo) {
+      const baseLeft = 56;   // 基础偏移值
+      const leftMargin = 61; // 中心点基础偏移值
+      const topMargin = 4;   // 垂直方向基础偏移值
+      const rowH = 28;       // 行高
+      const indentStep = 38; // 行缩进值
+
+      // 手势状态
+      this._gestureStatus = 'press';
+
+      // 根据数据下标获取位置
+      const getHandleTop = (index) => {
+        if (this.dataList.length === 0) return 0;
+
+        const barInfo = this.dataList[index];
+        if (!barInfo) {
+          index = this.dataList.length - 1;
+        } 
+
+        return index * rowH + topMargin + rowH;
+      }
+
+      // 根据缩进值获取Left值
+      const getHandleLeftByIndent = (indent) => {
+        return indent * indentStep + leftMargin;
+      }
+
+      // 根据鼠标的offsetX获取行缩进值
+      const getHandleIndentByOffsetX = (index, offsetX) => {
+        if (this.dataList.length === 0) return 0;
+
+        const barInfo = this.dataList[index];
+        if (!barInfo) {
+          index = this.dataList.length - 1;
+        }
+
+        offsetX = (offsetX - baseLeft < 0) ? 0 : offsetX - baseLeft;
+
+        let depth = barInfo._depth;
+        let indent = Math.floor(offsetX / indentStep);
+
+        if (indent > depth + 1) {
+          indent = depth + 1;
+        }
+
+        return indent;
+      }
+
+      // 根据行索引获取Left值
+      const getHandleLeftByIndex = (index) => {
+        const barInfo = this.dataList[index];
+        if (this.dataList.length === 0 || !barInfo) return leftMargin;
+        
+        return getHandleLeftByIndent(barInfo._depth);
+      }
+
+      const getNextHandleIndexByIndent = (index, indent) => {
+        const barInfo = this.dataList[index];
+        if (this.dataList.length === 0 || !barInfo) return 0;
+
+        let nextIdx = index;
+        while (!barInfo._collapsed && nextIdx < this.dataList.length) {
+          if (nextIdx === index) {
+            nextIdx ++;
+            continue;
+          }
+
+          let barInfo = this.dataList[nextIdx];
+          if(barInfo._depth > indent) {
+            nextIdx ++;
+          } else {
+            break;
+          }
+        }
+
+        if (nextIdx !== index) {
+          index = nextIdx - 1;
+        }
+
+        return index;
+      }
+
+      // 根据鼠标位置获取数据下标
+      const getHandleBarIndex = (top) => {
+        const topMargin = 4;
+        const rowH = 28;
+
+        top = top - topMargin < 0 ? 0 : top - topMargin;
+        let index = Math.floor(top / rowH);
+        if (index >= this.dataList.length) {
+          index = this.dataList.length - 1;
+        }
+
+        return index;
+      }
+
+      // TODO 鼠标移动 适当做节流优化
+      const panMove = (event) => {
+        // 根据鼠标Y坐标获取所处行索引
+        const index = getHandleBarIndex(event.offsetY);
+        this.targetHandleIndex = (this.dataList[index] || {})._flattenIndex;
+
+        // 根据行索引及X坐标获取缩进值
+        const nextIndent  = getHandleIndentByOffsetX(index, event.offsetX);
+        this.handleNextIndent = nextIndent;
+
+        // 根据缩进值获取左侧缩进位置
+        this.handleLeft = getHandleLeftByIndent(nextIndent);
+
+        // 根据所处行及缩进值获取插入的位置
+        const nextIndex = getNextHandleIndexByIndent(index, nextIndent);
+        this.handleNextIndex = nextIndex;
+        this.handleTop = getHandleTop(nextIndex);
+      };
+
+      // 行的折叠状态
+      this._handleOpen = !barInfo._collapsed;
+
+      // 如果当前行未折叠 进行折叠操作
+      if (this._handleOpen && this.getShowTrigger(barInfo)) this.rowTrigger(barInfo);
+
+      // 记录数据下标 
+      this.handleIndex = barInfo._flattenIndex; 
+      this.targetHandleIndex = barInfo._flattenIndex;
+      this.handleNextIndex = barInfo._flattenIndex;
+      this.handleNextIndent = barInfo._depth;
+
+      // 记录插入数据的位置
+      this.handleTop = getHandleTop(this.handleIndex);
+      this.handleLeft = getHandleLeftByIndex(this.handleIndex);
+      this._panMove = panMove;
+      
+    },
+    gestureMove(event) {
+      // 手势为press状态不进行操作
+      if (this._gestureStatus !== 'press') return;
+
+      this._panMove && this._panMove(event);
+    },
+    gesturePressup() {
+      if (this._gestureStatus !== 'press') return;
+
+      // 获取移动的行数数据
+      const handleBarInfo = this.rowDataList[this.handleIndex];
+
+      // 恢复展开行的状态
+      this._handleOpen && this.getShowTrigger(handleBarInfo) && this.rowTrigger(handleBarInfo);
+
+      // 要拖动数据索引
+      const handleIndex = this.handleIndex;
+      // 鼠标位置所处的数据索引
+      const targetHandleIndex = this.targetHandleIndex;
+      // 数据需要移动到位置数据索引
+      const handleNextIndex = this.handleNextIndex;
+      // 数据缩进的位置
+      const handleNextIndent = this.handleNextIndent;
+
+      this.handleIndex = -1;
+      delete this._gestureStatus;
+
+      // 获取父级任务
+      const getParentTask = (targetHandleIndex, handleNextIndent) => {
+        // 视图数据
+        const dataList = this.dataList;
+        // 鼠标所触发的行数据
+        const targetBar = dataList[targetHandleIndex];
+        if (!targetBar) return null;
+
+        // 父任务
+        const targetTask = targetBar.task;
+        // 缩进值
+        const depth = targetBar._depth;
+
+        // 同级别缩进值和父子关系
+        if (depth === handleNextIndent) {
+          return targetTask._parent;
+        } else if (depth < handleNextIndent) {
+          return targetTask;
+        }
+
+        // 向上查找父亲
+        let index = targetHandleIndex;
+        while(index >= 0 && index < dataList.length) {
+          let task = dataList[index].task;
+
+          if (task._depth === handleNextIndent) {
+            return task._parent;
+          }
+
+          if (task._depth < handleNextIndent) {
+            return task;
+          }
+
+          index --;
+        }
+
+        return null;
+      }
+      const getTargetTask = (targetHandleIndex) => {
+        // 视图数据
+        const dataList = this.dataList;
+        // 鼠标所触发的行数据
+        const targetBar = dataList[targetHandleIndex];
+        if (!targetBar) return null;
+
+        return targetBar.task;
+      }
+
+      // 获取移动数据
+      const getHandleTask = (handleIndex) => {
+        // 视图数据
+        const dataList = this.dataList;
+
+        // 鼠标所触发的行数据
+        const handleBar = dataList[handleIndex];
+        if (!handleBar) return null;
+
+        return handleBar.task;
+      }
+
+      // 需要移动数据
+      const handleTask = getHandleTask(handleIndex);
+      // 需要插入的行数据
+      const parentTask = getParentTask(targetHandleIndex, handleNextIndent);
+      // 鼠标所处位置的行数据
+      const targetTask = getTargetTask(targetHandleIndex);
+      
+      // 父级原始节点
+      const preParent = handleTask._parent;
+
+      // 执行删除数据逻辑
+      if (!handleTask) return;
+      if (handleTask === targetTask && handleNextIndent >= targetTask._depth) return;
+
+      let children = this.$parent.dataList;
+      if (handleTask._parent) {
+        children = handleTask._parent.children || [];
+      } 
+
+      handleTask._parent = parentTask;  // 切换父子关系
+      children.splice(handleTask._index, 1);
+      let index = 0;
+
+      // 父子关系插入行数据
+      if (parentTask === targetTask) {
+        parentTask.children.unshift(handleTask);
+      } else {
+        // 取出子元素
+        children = this.$parent.dataList;
+        if (parentTask) {
+          children = parentTask.children;
+        }
+
+        // 根据插入的父子关系 来判断插入位置
+        if (handleNextIndent > targetTask._depth) {
+          children.unshift(handleTask);
+        } else { 
+          // 根据邻近的兄弟元素 获取插入的位置
+          let sibTask = this.dataList[handleNextIndex + 1]; 
+          let splitIdx = sibTask ? sibTask._index : children.length;
+          if (!sibTask || sibTask._depth < handleNextIndent) {
+            children.push(handleTask);
+            index = children.length - 1;
+          } else {
+            let appendChildren = children.splice(splitIdx);
+            children.push(handleTask, ...appendChildren);
+            index = splitIdx;
+          }
+        } 
+      }
+
+      this.$parent.barList = this.$parent.getBarList();
+
+      // console.log(parentTask, handleTask, index, '>>>>>>>>>>>>>>>');
+      this.$parent.$emit('onDragSort', preParent, parentTask, handleTask._index, index, handleTask);
+    },
+    mousemove(event) {
+      this.$emit('mousemove', event);
+      // this.gestureMove(event);
+    },
+    rowHandleClick(event, barInfo) {
+      if (this._gestureStatus === 'press') return;
+
+      this.$parent.$emit('onToDetail', barInfo.task)
+    },
+  },
+  mounted() {
+    document.body.addEventListener('mouseup', this.gesturePressup);
+  },
+  beforeDestroy() {
+    document.body.removeEventListener('mouseup', this.gesturePressup);
+    this.bodyHammer && this.bodyHammer.destroy();
+  },
 }
 </script>
